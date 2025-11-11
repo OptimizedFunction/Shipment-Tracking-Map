@@ -292,12 +292,21 @@ const DataPointOverlay = ({ mapRef }) => {
     universeData,
     storageData,
     contracts,
-    stationData
+    stationData,
+    groupShips,
+    groupFlights,
+    groupStorageData,
+    groupContracts,
+    setGroupShips,
+    setGroupFlights,
+    setGroupStorageData,
+    setGroupContracts
   } = useContext(GraphContext);
   const {
     authToken,
     userName,
     authStrategy,
+    isAuthenticated,
     loginWithApiKey,
     logout
   } = useContext(AuthContext);
@@ -308,6 +317,46 @@ const DataPointOverlay = ({ mapRef }) => {
   const [silToggleError, setSilToggleError] = useState(null);
   const [isShipFilterCollapsed, setIsShipFilterCollapsed] = useState(false);
   const [showSilTooltip, setShowSilTooltip] = useState(false);
+  const [groupId, setGroupId] = useState('');
+  const [groupLoading, setGroupLoading] = useState(false);
+  const [groupError, setGroupError] = useState(null);
+  const [groupUsernames, setGroupUsernames] = useState([]);
+  const [selectedGroupUsers, setSelectedGroupUsers] = useState(['__all__']);
+  const [isGroupUserFilterCollapsed, setIsGroupUserFilterCollapsed] = useState(true);
+
+  // Combine user and group data for rendering
+  const combinedShips = useMemo(() => {
+    const userShips = ships || [];
+    const filteredGroupShips = selectedGroupUsers.includes('__all__')
+      ? (groupShips || [])
+      : (groupShips || []).filter(ship => selectedGroupUsers.includes(ship._user));
+    // When in group mode (selectedGroupUsers has values), exclude user's own data
+    return selectedGroupUsers.length > 0 ? filteredGroupShips : [...userShips, ...filteredGroupShips];
+  }, [ships, groupShips, selectedGroupUsers]);
+  const combinedFlights = useMemo(() => {
+    const userFlights = flights || [];
+    const filteredGroupFlights = selectedGroupUsers.includes('__all__')
+      ? (groupFlights || [])
+      : (groupFlights || []).filter(flight => selectedGroupUsers.includes(flight._user));
+    // When in group mode (selectedGroupUsers has values), exclude user's own data
+    return selectedGroupUsers.length > 0 ? filteredGroupFlights : [...userFlights, ...filteredGroupFlights];
+  }, [flights, groupFlights, selectedGroupUsers]);
+  const combinedStorageData = useMemo(() => {
+    const userStorage = storageData || [];
+    const filteredGroupStorage = selectedGroupUsers.includes('__all__')
+      ? (groupStorageData || [])
+      : (groupStorageData || []).filter(storage => selectedGroupUsers.includes(storage._user));
+    // When in group mode (selectedGroupUsers has values), exclude user's own data
+    return selectedGroupUsers.length > 0 ? filteredGroupStorage : [...userStorage, ...filteredGroupStorage];
+  }, [storageData, groupStorageData, selectedGroupUsers]);
+  const combinedContracts = useMemo(() => {
+    const userContracts = contracts || [];
+    const filteredGroupContracts = selectedGroupUsers.includes('__all__')
+      ? (groupContracts || [])
+      : (groupContracts || []).filter(contract => selectedGroupUsers.includes(contract._user));
+    // When in group mode (selectedGroupUsers has values), exclude user's own data
+    return selectedGroupUsers.length > 0 ? filteredGroupContracts : [...userContracts, ...filteredGroupContracts];
+  }, [contracts, groupContracts, selectedGroupUsers]);
   const labelsEnabled = Boolean(showShipLabels);
   const previousAuthRef = useRef(null);
 
@@ -320,7 +369,7 @@ const DataPointOverlay = ({ mapRef }) => {
 
   const storageIndex = useMemo(() => {
     const index = new Map();
-    (storageData || []).forEach((record) => {
+    (combinedStorageData || []).forEach((record) => {
       if (!record || typeof record !== 'object') {
         return;
       }
@@ -357,7 +406,7 @@ const DataPointOverlay = ({ mapRef }) => {
       });
     });
     return index;
-  }, [storageData]);
+  }, [combinedStorageData]);
 
   const shipmentContractsByItemId = useMemo(() => {
     const map = new Map();
@@ -374,7 +423,7 @@ const DataPointOverlay = ({ mapRef }) => {
       return null;
     };
 
-    (contracts || []).forEach((contract) => {
+    (combinedContracts || []).forEach((contract) => {
       if (!contract || typeof contract !== 'object') {
         return;
       }
@@ -483,7 +532,7 @@ const DataPointOverlay = ({ mapRef }) => {
     });
 
     return map;
-  }, [contracts]);
+  }, [combinedContracts]);
 
   const shipLoadInfo = useMemo(() => {
     const map = new Map();
@@ -750,10 +799,10 @@ const DataPointOverlay = ({ mapRef }) => {
       });
     };
 
-    (ships || []).forEach(considerShip);
+    (combinedShips || []).forEach(considerShip);
 
     return map;
-  }, [ships, storageIndex, shipmentContractsByItemId]);
+  }, [combinedShips, storageIndex, shipmentContractsByItemId]);
 
   const normalizedPartnerFilter = useMemo(() => normalizeLookupKey(partnerFilter) || '', [partnerFilter]);
   const partnerFilterActive = normalizedPartnerFilter.length > 0;
@@ -903,7 +952,7 @@ const DataPointOverlay = ({ mapRef }) => {
 
     // Count shipments from storage (planetary storage + warehouses)
     // Badge shows where shipments currently ARE, not where they're going
-    (storageData || []).forEach((storage) => {
+    (combinedStorageData || []).forEach((storage) => {
       if (!storage || typeof storage !== 'object') return;
 
       // Find the system where this storage is located
@@ -1020,14 +1069,15 @@ const DataPointOverlay = ({ mapRef }) => {
             volume: item.TotalVolume || 0,
             contract: contractInfo,
             storageType: storage.Type,
-            locationName: storage.LocationName || storage.PlanetName
+            locationName: storage.LocationName || storage.PlanetName,
+            owner: storage._user
           });
         }
       });
     });
 
     return { counts, shipmentDetails };
-  }, [storageData, planetData, universeData, stationData, shipmentContractsByItemId, normalizeLookupKey]);
+  }, [combinedStorageData, planetData, universeData, stationData, shipmentContractsByItemId, normalizeLookupKey]);
 
   const showNoPartnerMatches = partnerFilterActive
     && (!partnerFilteredShipments || partnerFilteredShipments.size === 0);
@@ -1078,6 +1128,143 @@ const DataPointOverlay = ({ mapRef }) => {
       setSilToggleLoading(false);
     }
   }, [authToken, authStrategy, loginWithApiKey, logout, userName]);
+
+  const handleGroupFetch = useCallback(async () => {
+    setGroupLoading(true);
+    setGroupError(null);
+    if (!groupId || !isAuthenticated) return;
+    try {
+      const headerValue = typeof authToken === 'string' ? authToken.trim() : '';
+      const headers = headerValue ? { Authorization: headerValue, Accept: 'application/json' } : { Accept: 'application/json' };
+      const resp = await fetch(`https://rest.fnar.net/auth/group/${groupId}`, { headers });
+      if (resp.status === 204) {
+        setGroupError('Group with specified id not found');
+        setGroupLoading(false);
+        return;
+      }
+      if (!resp.ok) {
+        setGroupError(`Failed to fetch group info: ${resp.status}`);
+        setGroupLoading(false);
+        return;
+      }
+      const payload = await resp.json();
+      const usernames = [
+        ...(payload.GroupAdmins?.map(a => a.GroupAdminUserName) || []),
+        ...(payload.GroupUsers?.map(u => u.GroupUserName) || [])
+      ];
+      // Remove duplicates from usernames
+      const uniqueUsernames = [...new Set(usernames)];
+
+      // Track successful fetches per user
+      const successfulUsers = new Set();
+
+      // Fetch data for each user
+      const allGroupShips = [];
+      const allGroupFlights = [];
+      const allGroupStorage = [];
+      const allGroupContracts = [];
+
+      for (const username of uniqueUsernames) {
+        let allFetchesSuccessful = true;
+
+        try {
+          // Example endpoints, replace with actual endpoints as needed
+          const shipResp = await fetch(`https://rest.fnar.net/ship/ships/${username}`, { headers });
+          const flightResp = await fetch(`https://rest.fnar.net/ship/flights/${username}`, { headers });
+          const contractResp = await fetch(`https://rest.fnar.net/contract/allcontracts/${username}`, { headers });
+          const storageResp = await fetch(`https://rest.fnar.net/storage/${username}`, { headers });
+
+          const shipData = shipResp.ok ? await shipResp.json() : null;
+          const flightData = flightResp.ok ? await flightResp.json() : null;
+          const storageData = storageResp.ok ? await storageResp.json() : null;
+          const contractData = contractResp.ok ? await contractResp.json() : null;
+
+          // Check if all fetches were successful
+          if (!shipResp.ok || !flightResp.ok || !contractResp.ok || !storageResp.ok) {
+            allFetchesSuccessful = false;
+          }
+
+          if (allFetchesSuccessful) {
+            successfulUsers.add(username);
+
+            // Collect all data for rendering
+            if (shipData && Array.isArray(shipData)) {
+              shipData.forEach(ship => {
+                allGroupShips.push({ ...ship, _user: username });
+              });
+            }
+            if (flightData && Array.isArray(flightData)) {
+              flightData.forEach(flight => {
+                allGroupFlights.push({ ...flight, _user: username });
+              });
+            }
+            if (storageData && Array.isArray(storageData)) {
+              storageData.forEach(storage => {
+                allGroupStorage.push({ ...storage, _user: username });
+              });
+            }
+            if (contractData && Array.isArray(contractData)) {
+              contractData.forEach(contract => {
+                allGroupContracts.push({ ...contract, _user: username });
+              });
+            }
+
+            // Log each successfully pulled user's data
+            if (shipData || flightData || storageData || contractData) {
+              // eslint-disable-next-line no-console
+              console.log(`[Group Fetch] Pulled data for user: ${username}`, {
+                ships: shipData,
+                flights: flightData,
+                storage: storageData,
+                contracts: contractData
+              });
+            }
+          }
+        } catch (err) {
+          // If any error occurs, mark as unsuccessful
+          allFetchesSuccessful = false;
+        }
+      }
+
+      // Only include users where all fetches were successful
+      const successfulUsernames = uniqueUsernames.filter(username => successfulUsers.has(username));
+      setGroupUsernames(successfulUsernames);
+
+      // Update GraphContext with combined group data
+      setGroupShips(allGroupShips);
+      setGroupFlights(allGroupFlights);
+      setGroupStorageData(allGroupStorage);
+      setGroupContracts(allGroupContracts);
+    } catch (err) {
+      setGroupError('Failed to fetch group info');
+    }
+    setGroupLoading(false);
+  }, [groupId, isAuthenticated, authToken, setGroupShips, setGroupFlights, setGroupStorageData, setGroupContracts]);
+
+  const handleGroupUserSelectionChange = useCallback((username, checked) => {
+    if (username === '__all__') {
+      if (checked) {
+        setSelectedGroupUsers(['__all__']);
+      } else {
+        setSelectedGroupUsers([]);
+      }
+    } else {
+      setSelectedGroupUsers(prev => {
+        let newSelection;
+        if (checked) {
+          // Remove __all__ if it was selected and add the specific user
+          newSelection = prev.filter(user => user !== '__all__');
+          if (!newSelection.includes(username)) {
+            newSelection.push(username);
+          }
+        } else {
+          // Remove the specific user
+          newSelection = prev.filter(user => user !== username);
+        }
+        return newSelection;
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (!partnerFilterActive) {
@@ -1515,7 +1702,7 @@ const DataPointOverlay = ({ mapRef }) => {
   const shipOptions = useMemo(() => {
     const seen = new Set();
     const opts = [];
-    (ships || []).forEach((ship) => {
+    (combinedShips || []).forEach((ship) => {
       const id = ship?.ShipId || ship?.Id || ship?.Ship || ship?.Registration || ship?.Name;
       if (!id) return;
       const idStr = String(id);
@@ -1526,7 +1713,7 @@ const DataPointOverlay = ({ mapRef }) => {
     });
     opts.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
     return [{ id: '__all__', label: 'All Ships' }, ...opts];
-  }, [ships]);
+  }, [combinedShips]);
 
   const handleShipChange = useCallback((event) => {
     setSelectedShipId(event.target.value);
@@ -1538,14 +1725,14 @@ const DataPointOverlay = ({ mapRef }) => {
 
   useEffect(() => {
     if (selectedShipId === '__all__') return;
-    const stillExists = (ships || []).some((ship) => {
+    const stillExists = (combinedShips || []).some((ship) => {
       const id = ship?.ShipId || ship?.Id || ship?.Ship || ship?.Registration || ship?.Name;
       return id && String(id) === selectedShipId;
     });
     if (!stillExists) {
       setSelectedShipId('__all__');
     }
-  }, [ships, selectedShipId]);
+  }, [combinedShips, selectedShipId]);
 
   const renderOverlay = useCallback(() => {
     if (!mapRef?.current?.g) return;
@@ -1577,7 +1764,7 @@ const DataPointOverlay = ({ mapRef }) => {
     const zoomLevel = transform?.k || 1;
 
     const shipsById = new Map();
-    (ships || []).forEach((ship) => {
+    (combinedShips || []).forEach((ship) => {
       const keys = [
         ship?.ShipId,
         ship?.Id,
@@ -1593,7 +1780,7 @@ const DataPointOverlay = ({ mapRef }) => {
     });
 
     const flightsByShipId = new Map();
-    (flights || []).forEach((flight) => {
+    (combinedFlights || []).forEach((flight) => {
       if (flight.ShipId) {
         flightsByShipId.set(flight.ShipId, flight);
       }
@@ -2600,8 +2787,8 @@ const DataPointOverlay = ({ mapRef }) => {
       };
     };
 
-    if (graph && (ships?.length > 0 || flights?.length > 0)) {
-      (flights || []).forEach((flight) => {
+    if (graph && (combinedShips?.length > 0 || combinedFlights?.length > 0)) {
+      (combinedFlights || []).forEach((flight) => {
         const flightShipId = flight?.ShipId ?? flight?.shipId ?? flight?.Ship ?? null;
         const flightShipIdStr = flightShipId != null ? String(flightShipId) : null;
 
@@ -3272,6 +3459,17 @@ const DataPointOverlay = ({ mapRef }) => {
               .attr('font-weight', 700)
               .text(shipDisplayName);
 
+            // Add owner label for group ships
+            if (ship._user && groupShips && groupShips.length > 0) {
+              label.append('tspan')
+                .attr('x', labelX)
+                .attr('dy', `${lineHeight * 0.9}px`)
+                .attr('fill', '#60a5fa')
+                .attr('font-weight', 600)
+                .style('font-size', `${baseFontSize * 0.85}px`)
+                .text(`Owner: ${ship._user}`);
+            }
+
             const typeDescription = shipTypeLabel;
 
             const typeTspan = label.append('tspan')
@@ -3396,8 +3594,8 @@ const DataPointOverlay = ({ mapRef }) => {
       });
     }
 
-    if (graph && (ships?.length > 0 || flights?.length > 0)) {
-      (ships || []).forEach((ship) => {
+    if (graph && (combinedShips?.length > 0 || combinedFlights?.length > 0)) {
+      (combinedShips || []).forEach((ship) => {
         const shipKey = ship?.ShipId || ship?.Id || ship?.Ship || ship?.Registration || ship?.Name;
         if (!shipKey) {
           return;
@@ -3832,6 +4030,17 @@ const DataPointOverlay = ({ mapRef }) => {
           .attr('font-weight', 700)
           .text(shipDisplayName);
 
+        // Add owner label for group ships
+        if (ship._user && groupShips && groupShips.length > 0) {
+          label.append('tspan')
+            .attr('x', labelX)
+            .attr('dy', `${lineHeight * 0.9}px`)
+            .attr('fill', '#60a5fa')
+            .attr('font-weight', 600)
+            .style('font-size', `${baseFontSize * 0.85}px`)
+            .text(`Owner: ${ship._user}`);
+        }
+
         const typeDescription = shipTypeLabel;
 
         const typeTspan = label.append('tspan')
@@ -4034,6 +4243,17 @@ const DataPointOverlay = ({ mapRef }) => {
               }
             }
 
+            const lines = [
+              `Contract ${contractLocalId}${deadlineText}`,
+              `Wt ${weightText} · Vol ${volumeText}`,
+              `Dest ${destination}`
+            ];
+
+            // Add owner information if available and in group mode
+            if (shipment.owner && groupStorageData && groupStorageData.length > 0) {
+              lines.push(`Owner: ${shipment.owner}`);
+            }
+
             contractTiles.push({
               localId: contractLocalId,
               deadlineText,
@@ -4041,11 +4261,7 @@ const DataPointOverlay = ({ mapRef }) => {
               volumeText,
               destination,
               locationName,
-              lines: [
-                `Contract ${contractLocalId}${deadlineText}`,
-                `Wt ${weightText} · Vol ${volumeText}`,
-                `Dest ${destination}`
-              ]
+              lines
             });
           } else {
             shipmentsWithoutContract++;
@@ -4367,7 +4583,7 @@ const DataPointOverlay = ({ mapRef }) => {
       addBarHoverEffects(densityBar, 'Density', density, densityColorScale);
       addBarHoverEffects(luminosityBar, 'Luminosity', luminosity, luminosityColorScale);
     });
-  }, [mapRef, isOverlayVisible, isLoading, error, meteorDensityData, luminosityData, systemNames, maxValues, ships, flights, graph, selectedShipId, planetLookups, systemLookups, showShipLabels, getShipLoadInfoById, getLoadColorForRatio, buildLoadSummary, buildShipmentTiles, buildLoadBarDescriptors, formatCapacityValue, partnerFilterActive, partnerFilteredShipments, filterShipmentsByPartner, systemShipmentCounts]);
+  }, [mapRef, isOverlayVisible, isLoading, error, meteorDensityData, luminosityData, systemNames, maxValues, combinedShips, combinedFlights, graph, selectedShipId, planetLookups, systemLookups, showShipLabels, getShipLoadInfoById, getLoadColorForRatio, buildLoadSummary, buildShipmentTiles, buildLoadBarDescriptors, formatCapacityValue, partnerFilterActive, partnerFilteredShipments, filterShipmentsByPartner, systemShipmentCounts]);
 
   useEffect(() => {
     renderOverlay();
@@ -4422,7 +4638,7 @@ const DataPointOverlay = ({ mapRef }) => {
           }}
           onClick={() => setIsShipFilterCollapsed(!isShipFilterCollapsed)}
         >
-          <span style={{ fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '11px' }}>Shipment Tracking</span>
+          <span style={{ fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '11px' }}>Ship Tracking</span>
           <span style={{ fontSize: '14px', opacity: 0.7 }}>{isShipFilterCollapsed ? '▶' : '▼'}</span>
         </div>
 
@@ -4581,6 +4797,106 @@ const DataPointOverlay = ({ mapRef }) => {
             >
               {labelsEnabled ? 'Hide Ship Labels' : 'Show Ship Labels'}
             </button>
+
+            {!isSilTracking && (
+              <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 500, opacity: 0.85 }}>Show Group Ships & Flights</span>
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      placeholder={isAuthenticated ? "Enter Group ID" : "Log in to use group functionality"}
+                      value={groupId}
+                      onChange={e => setGroupId(e.target.value)}
+                      disabled={!isAuthenticated}
+                      style={{
+                        background: isAuthenticated ? '#1f2933' : '#2a2a2a',
+                        color: isAuthenticated ? '#f5f5f5' : '#888',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        borderRadius: '4px',
+                        padding: '5px 6px',
+                        fontSize: '12px',
+                        outline: 'none',
+                        flex: 1,
+                        cursor: isAuthenticated ? 'text' : 'not-allowed'
+                      }}
+                    />
+                    <button
+                      onClick={handleGroupFetch}
+                      disabled={!isAuthenticated || groupLoading || !groupId}
+                      style={{
+                        background: (!isAuthenticated || groupLoading || !groupId) ? '#6b7280' : '#3b82f6',
+                        color: '#f5f5f5',
+                        border: 'none',
+                        borderRadius: '4px',
+                        padding: '6px 8px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: (!isAuthenticated || groupLoading || !groupId) ? 'not-allowed' : 'pointer',
+                        opacity: (!isAuthenticated || groupLoading || !groupId) ? 0.65 : 1,
+                        transition: 'background 0.2s ease'
+                      }}
+                    >
+                      {!isAuthenticated ? 'Login Required' : groupLoading ? 'Loading...' : 'Show Group'}
+                    </button>
+                  </div>
+                  {groupError && (
+                    <span style={{ fontSize: '10px', color: '#fca5a5', marginTop: '4px' }}>
+                      {groupError}
+                    </span>
+                  )}
+                </label>
+
+                {groupUsernames.length > 0 && (
+                  <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        marginBottom: '4px'
+                      }}
+                      onClick={() => setIsGroupUserFilterCollapsed(!isGroupUserFilterCollapsed)}
+                    >
+                      <span style={{ fontSize: '11px', fontWeight: 500, opacity: 0.85 }}>Filter Group Users</span>
+                      <span style={{ fontSize: '14px', opacity: 0.7 }}>{isGroupUserFilterCollapsed ? '▶' : '▼'}</span>
+                    </div>
+
+                    {!isGroupUserFilterCollapsed && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '200px', overflowY: 'auto' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 500, opacity: 0.85 }}>Select users to display</span>
+
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedGroupUsers.includes('__all__')}
+                            onChange={(e) => handleGroupUserSelectionChange('__all__', e.target.checked)}
+                            disabled={!isAuthenticated}
+                            style={{ cursor: isAuthenticated ? 'pointer' : 'not-allowed' }}
+                          />
+                          <span>All Users</span>
+                        </label>
+
+                        {groupUsernames.map((username) => (
+                          <label key={username} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
+                            <input
+                              type="checkbox"
+                              checked={selectedGroupUsers.includes(username)}
+                              onChange={(e) => handleGroupUserSelectionChange(username, e.target.checked)}
+                              disabled={!isAuthenticated || selectedGroupUsers.includes('__all__')}
+                              style={{ cursor: (isAuthenticated && !selectedGroupUsers.includes('__all__')) ? 'pointer' : 'not-allowed' }}
+                            />
+                            <span>{username}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>

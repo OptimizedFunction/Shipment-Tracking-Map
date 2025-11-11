@@ -74,7 +74,6 @@ const FilterCategories = () => {
   const { filters, updateFilters } = useContext(SearchContext);
   const [cogcActive, setCogcActive] = useState(false);
   const { overlayProgram } = useCogcOverlay();
-
   const handleChange = (category, option) => {
     const newFilters = {
       ...filters,
@@ -107,12 +106,12 @@ const FilterCategories = () => {
   };
 
   const handleCogcProgramChange = (value) => {
-      if(cogcActive) {
-        const valueToSet = cogcPrograms.find(program => program.display === value);
-        updateFilters({ ...filters, cogcProgram: [valueToSet.value] });
-      } else {
-        updateFilters({ ...filters, cogcProgram: [] });
-      }
+    if (cogcActive) {
+      const valueToSet = cogcPrograms.find(program => program.display === value);
+      updateFilters({ ...filters, cogcProgram: [valueToSet.value] });
+    } else {
+      updateFilters({ ...filters, cogcProgram: [] });
+    }
 
   };
 

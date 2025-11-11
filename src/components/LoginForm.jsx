@@ -79,10 +79,10 @@ const LoginForm = ({ onClose }) => {
                     </button>
                 </div>
                 <p className="login-hint">
-                    Enter your username and either a password or an API key. You don&apos;t need both.
+                    Enter your FIO username and either a password or an API key. You don&apos;t need both.
                 </p>
                 <form className="login-form" onSubmit={handleSubmit}>
-                    <label htmlFor="login-username">Username
+                    <label htmlFor="login-username">FIO Username
                         <span className="required-indicator" aria-hidden="true">*</span>
                         <span className="sr-only"> (required)</span>
                     </label>
@@ -96,7 +96,7 @@ const LoginForm = ({ onClose }) => {
                         disabled={authLoading}
                     />
 
-                    <label htmlFor="login-password">Password (optional if API key provided)</label>
+                    <label htmlFor="login-password">FIO Password (optional if API key provided)</label>
                     <input
                         id="login-password"
                         name="password"
@@ -113,7 +113,7 @@ const LoginForm = ({ onClose }) => {
                         <span className="divider-line" />
                     </div>
 
-                    <label htmlFor="login-api-key">API Key (optional if password entered)</label>
+                    <label htmlFor="login-api-key">FIO API Key (optional if password entered)</label>
                     <input
                         id="login-api-key"
                         name="apiKey"

@@ -26,6 +26,10 @@ export const GraphProvider = ({ children }) => {
   const [contracts, setContracts] = useState([]);
   const [contractSnapshot, setContractSnapshot] = useState([]);
   const [stationData, setStationData] = useState([]);
+  const [groupShips, setGroupShips] = useState([]);
+  const [groupFlights, setGroupFlights] = useState([]);
+  const [groupStorageData, setGroupStorageData] = useState([]);
+  const [groupContracts, setGroupContracts] = useState([]);
   const { authToken, userName } = useContext(AuthContext);
 
   useEffect(() => {
@@ -285,11 +289,19 @@ export const GraphProvider = ({ children }) => {
     contracts,
     contractSnapshot,
     stationData,
+    groupShips,
+    groupFlights,
+    groupStorageData,
+    groupContracts,
     setShips,
     setFlights,
     setStorageData,
     setContracts,
-    setContractSnapshot
+    setContractSnapshot,
+    setGroupShips,
+    setGroupFlights,
+    setGroupStorageData,
+    setGroupContracts
   }), [
     graph,
     materials,
@@ -302,7 +314,11 @@ export const GraphProvider = ({ children }) => {
     storageData,
     contracts,
     contractSnapshot,
-    stationData
+    stationData,
+    groupShips,
+    groupFlights,
+    groupStorageData,
+    groupContracts
   ]);
 
   return (
