@@ -13,7 +13,7 @@ const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const logger = require("firebase-functions/logger");
 
-const MAX_CONTRACT_SNAPSHOT_SIZE = 500;
+const MAX_CONTRACT_SNAPSHOT_SIZE = 1500;
 const CONTRACT_SNAPSHOT_COLLECTION = "snapshots";
 const CONTRACT_SNAPSHOT_PREFIX = "contracts_";
 const CONTRACT_SOURCE_URL = "https://rest.fnar.net/contract/allcontracts";
