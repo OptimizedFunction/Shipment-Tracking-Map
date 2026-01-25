@@ -6,10 +6,8 @@ import React, {
   useMemo,
   useState
 } from 'react';
-import { doc, onSnapshot, collection, where, query } from 'firebase/firestore';
 import { findShortestPath as findShortestPathUtil, highlightPath } from '../utils/graphUtils';
 import { AuthContext } from './AuthContext';
-import { getFirestoreClient } from '../utils/firebaseClient';
 import { SIL_TRACKER_API_KEY, SIL_TRACKER_USERNAME } from '../constants/silTracking';
 
 export const GraphContext = createContext();
@@ -205,12 +203,8 @@ export const GraphProvider = ({ children }) => {
     };
 
     const fetchContracts = async () => {
-      if (authToken === SIL_TRACKER_API_KEY) {
-        return;
-      }
-
       try {
-        const response = await fetch(`https://rest.fnar.net/contract/allcontracts/${encodedUserName}`, {
+        const response = await fetch(`https://rest.fnar.net/contract/allcontracts/${encodedUserName}?count=500`, {
           headers
         });
 
@@ -247,37 +241,6 @@ export const GraphProvider = ({ children }) => {
   const findShortestPath = useCallback((system1, system2) => {
     findShortestPathUtil(graph, system1, system2, highlightPath);
   }, [graph]);
-
-  useEffect(() => {
-    if (authToken !== SIL_TRACKER_API_KEY) {
-      return () => { };
-    }
-
-    const firestore = getFirestoreClient();
-    if (!firestore) {
-      console.warn('[GraphContext] Firebase is not configured; SIL tracking snapshot subscription disabled');
-      return () => { };
-    }
-
-    const collectionRef = collection(firestore, 'snapshots');
-    const q = query(collectionRef, where('__name__', '>=', 'contracts_'), where('__name__', '<', 'contracts_\uf8ff'));
-    const unsubscribe = onSnapshot(q, (querySnap) => {
-      const allContracts = [];
-      querySnap.forEach((docSnap) => {
-        const data = docSnap.data();
-        const snapshotContracts = Array.isArray(data?.contracts) ? data.contracts : [];
-        allContracts.push(...snapshotContracts);
-      });
-      setContracts(allContracts);
-      setContractSnapshot(allContracts);
-    }, (error) => {
-      console.error('Error subscribing to SIL contract snapshot:', error);
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [authToken]);
 
   const contextValue = useMemo(() => ({
     graph,

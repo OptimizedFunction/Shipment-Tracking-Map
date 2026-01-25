@@ -852,7 +852,7 @@ const DataPointOverlay = ({ mapRef }) => {
           fetch(`https://rest.fnar.net/ship/ships/${encodeURIComponent(effectiveApiUsername)}`, { headers }),
           fetch(`https://rest.fnar.net/ship/flights/${encodeURIComponent(effectiveApiUsername)}`, { headers }),
           fetch(`https://rest.fnar.net/storage/${encodeURIComponent(effectiveApiUsername)}`, { headers }),
-          fetch(`https://rest.fnar.net/contract/allcontracts/${encodeURIComponent(effectiveApiUsername)}`, { headers })
+          fetch(`https://rest.fnar.net/contract/allcontracts/${encodeURIComponent(effectiveApiUsername)}?count=500`, { headers })
         ]);
 
         if (shipsResp.ok) {
@@ -1233,7 +1233,7 @@ const DataPointOverlay = ({ mapRef }) => {
           // Example endpoints, replace with actual endpoints as needed
           const shipResp = await fetch(`https://rest.fnar.net/ship/ships/${username}`, { headers });
           const flightResp = await fetch(`https://rest.fnar.net/ship/flights/${username}`, { headers });
-          const contractResp = await fetch(`https://rest.fnar.net/contract/allcontracts/${username}`, { headers });
+          const contractResp = await fetch(`https://rest.fnar.net/contract/allcontracts/${username}?count=500`, { headers });
           const storageResp = await fetch(`https://rest.fnar.net/storage/${username}`, { headers });
 
           const shipData = shipResp.ok ? await shipResp.json() : null;
