@@ -277,12 +277,15 @@ const DataPointOverlay = ({ mapRef }) => {
     meteorDensityData,
     luminosityData,
     systemNames,
+    systemIdByNaturalId,
     isOverlayVisible,
     isLoading,
     error,
     maxValues,
     showShipLabels,
-    toggleShipLabels
+    toggleShipLabels,
+    isGatewayLayerVisible,
+    gatewayData
   } = useDataPoints();
   const {
     graph,
@@ -1829,15 +1832,20 @@ const DataPointOverlay = ({ mapRef }) => {
     };
 
     const flightLayer = getLayer('flight-layer');
+    const gatewayLayer = getLayer('gateway-layer');
     const overlayLayer = getLayer('overlay-layer');
     const shipLayer = getLayer('ship-layer');
     const tooltipLayer = getLayer('tooltip-layer');
 
     flightLayer.selectAll('*').remove();
+    gatewayLayer.selectAll('*').remove();
     shipLayer.selectAll('*').remove();
     overlayLayer.selectAll('*').remove();
     tooltipLayer.selectAll('*').remove();
 
+    // Layer ordering: gateways above flights but below ships
+    flightLayer.raise();
+    gatewayLayer.raise();  // Gateways above flight paths
     overlayLayer.raise();
     shipLayer.raise();
     tooltipLayer.raise();
@@ -1846,6 +1854,516 @@ const DataPointOverlay = ({ mapRef }) => {
 
     const transform = d3.zoomTransform(g.node());
     const zoomLevel = transform?.k || 1;
+
+    // Gateway visualization
+    if (isGatewayLayerVisible && gatewayData && gatewayData.length > 0 && graph?.systems) {
+      
+      // Color mapping based on volume upgrades
+      const getGatewayColor = (volumeUpgrades) => {
+        switch (volumeUpgrades) {
+          case 0: return '#f91616ff'; // weight3000_volume1000 color
+          case 1: return '#ea8c08ff'; // capacity2000 color
+          case 2: return '#00eeffff'; // weight1000_volume3000 color
+          case 3: return '#d35cffff'; // capacity5000 color
+          default: return '#d35cffff'; // 3+ uses capacity5000 color
+        }
+      };
+
+      // Build gateway lookup by GatewayId
+      const gatewayById = new Map();
+      gatewayData.forEach(gw => {
+        gatewayById.set(gw.GatewayId, gw);
+      });
+
+      // Find linked gateway pairs
+      const processedLinks = new Set();
+      
+      gatewayData.forEach(gateway => {
+        if (!gateway.OutgoingLink) return;
+        if (gateway.LinkStatus !== 'ESTABLISHED') return;
+
+        const linkKey = [gateway.GatewayId, gateway.OutgoingLink].sort().join('-');
+        if (processedLinks.has(linkKey)) return;
+        processedLinks.add(linkKey);
+
+        const targetGateway = gatewayById.get(gateway.OutgoingLink);
+        if (!targetGateway) return;
+
+        // Get system positions for both gateways
+        // Gateway LocationNaturalId is like "ZV-307c", need to extract system part (before letter suffix if planet)
+        const extractSystemNaturalId = (locationNaturalId) => {
+          if (!locationNaturalId) return null;
+          // If it ends with a lowercase letter (planet suffix), remove it
+          const match = locationNaturalId.match(/^([A-Z]{2}-\d{3})/i);
+          return match ? match[1].toUpperCase() : locationNaturalId.toUpperCase();
+        };
+
+        const sourceSystemNatId = extractSystemNaturalId(gateway.LocationNaturalId);
+        const targetSystemNatId = extractSystemNaturalId(targetGateway.LocationNaturalId);
+        
+        if (!sourceSystemNatId || !targetSystemNatId) return;
+
+        const sourceSystemId = systemIdByNaturalId[sourceSystemNatId] || systemIdByNaturalId[sourceSystemNatId.toLowerCase()];
+        const targetSystemId = systemIdByNaturalId[targetSystemNatId] || systemIdByNaturalId[targetSystemNatId.toLowerCase()];
+
+        if (!sourceSystemId || !targetSystemId) return;
+
+        const sourceSystem = graph.systems[sourceSystemId];
+        const targetSystem = graph.systems[targetSystemId];
+
+        if (!sourceSystem || !targetSystem) return;
+
+        // Determine if link is bidirectional or unidirectional
+        const sourceOperational = gateway.OperationalState === 'OPERATIONAL';
+        const targetOperational = targetGateway.OperationalState === 'OPERATIONAL';
+        const isBidirectional = sourceOperational && targetOperational;
+
+        const sourceVolumeUpgrades = gateway.VolumeUpgrades || 0;
+        const targetVolumeUpgrades = targetGateway.VolumeUpgrades || 0;
+        const hasVolumeDifference = sourceVolumeUpgrades !== targetVolumeUpgrades;
+
+        const startX = sourceSystem.x;
+        const startY = sourceSystem.y;
+        const endX = targetSystem.x;
+        const endY = targetSystem.y;
+
+        const strokeWidth = Math.max(4.8 / zoomLevel, 2.4); // Reduced by 20%
+        const dashArray = `${24 / zoomLevel} ${16 / zoomLevel}`; // Longer dashes and gaps
+        
+        // Calculate perpendicular offset for dual lines
+        const dx = endX - startX;
+        const dy = endY - startY;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const perpX = -dy / len;
+        const perpY = dx / len;
+        const offset = hasVolumeDifference && isBidirectional ? Math.max(3 / zoomLevel, 1.5) : 0;
+
+        // Helper to draw a single gateway line with arrows along its length
+        const drawGatewayLine = (x1, y1, x2, y2, color, showArrow, arrowDirection, gwData, targetGwData) => {
+          const path = gatewayLayer.append('path')
+            .attr('class', 'gateway-link')
+            .attr('d', `M ${x1} ${y1} L ${x2} ${y2}`)
+            .attr('fill', 'none')
+            .attr('stroke', color)
+            .attr('stroke-width', strokeWidth)
+            .attr('stroke-dasharray', dashArray)
+            .attr('stroke-opacity', 0.85)
+            .attr('data-gateway-link', linkKey)
+            .style('cursor', 'pointer');
+
+          if (showArrow) {
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            const arrowAngle = arrowDirection === 'forward' ? angle : angle + Math.PI;
+            const lineLen = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
+            
+            // Arrow parameters - larger triangles, bigger than link width
+            const arrowLength = Math.max(10 / zoomLevel, 6);
+            const arrowWidth = Math.max(12 / zoomLevel, 7);
+            const arrowSpacing = Math.max(35 / zoomLevel, 20);
+            const numArrows = Math.max(3, Math.floor(lineLen / arrowSpacing));
+            
+            // Draw arrows along the line
+            for (let i = 1; i < numArrows; i++) {
+              const t = i / numArrows;
+              const ax = x1 + (x2 - x1) * t;
+              const ay = y1 + (y2 - y1) * t;
+              
+              // Large triangle arrow pointing in direction
+              const tipX = ax + arrowLength * 0.5 * Math.cos(arrowAngle);
+              const tipY = ay + arrowLength * 0.5 * Math.sin(arrowAngle);
+              const baseLeftX = ax - arrowLength * 0.5 * Math.cos(arrowAngle) + arrowWidth * 0.5 * Math.cos(arrowAngle + Math.PI/2);
+              const baseLeftY = ay - arrowLength * 0.5 * Math.sin(arrowAngle) + arrowWidth * 0.5 * Math.sin(arrowAngle + Math.PI/2);
+              const baseRightX = ax - arrowLength * 0.5 * Math.cos(arrowAngle) - arrowWidth * 0.5 * Math.cos(arrowAngle + Math.PI/2);
+              const baseRightY = ay - arrowLength * 0.5 * Math.sin(arrowAngle) - arrowWidth * 0.5 * Math.sin(arrowAngle + Math.PI/2);
+              
+              gatewayLayer.append('polygon')
+                .attr('class', 'gateway-arrow')
+                .attr('points', `${tipX},${tipY} ${baseLeftX},${baseLeftY} ${baseRightX},${baseRightY}`)
+                .attr('fill', color)
+                .attr('opacity', 1)
+                .attr('data-gateway-link', linkKey);
+            }
+          }
+
+          return path;
+        };
+
+        // Draw lines based on volume upgrade difference
+        let linkPaths = [];
+        
+        if (hasVolumeDifference && isBidirectional) {
+          // Two parallel lines with different colors showing capacity in each direction
+          // Line 1: Source → Target direction (uses source's volume upgrades)
+          const sourceColor = getGatewayColor(sourceVolumeUpgrades);
+          const line1StartX = startX + perpX * offset;
+          const line1StartY = startY + perpY * offset;
+          const line1EndX = endX + perpX * offset;
+          const line1EndY = endY + perpY * offset;
+          linkPaths.push(drawGatewayLine(line1StartX, line1StartY, line1EndX, line1EndY, sourceColor, true, 'forward', gateway, targetGateway));
+
+          // Line 2: Target → Source direction (uses target's volume upgrades)
+          const targetColor = getGatewayColor(targetVolumeUpgrades);
+          const line2StartX = startX - perpX * offset;
+          const line2StartY = startY - perpY * offset;
+          const line2EndX = endX - perpX * offset;
+          const line2EndY = endY - perpY * offset;
+          linkPaths.push(drawGatewayLine(line2StartX, line2StartY, line2EndX, line2EndY, targetColor, true, 'backward', targetGateway, gateway));
+        } else {
+          // Single line - use minimum volume upgrades for color
+          const effectiveVolumeUpgrades = Math.min(sourceVolumeUpgrades, targetVolumeUpgrades);
+          const linkColor = getGatewayColor(effectiveVolumeUpgrades);
+          
+          const showArrow = !isBidirectional;
+          const arrowDir = sourceOperational ? 'forward' : 'backward';
+          linkPaths.push(drawGatewayLine(startX, startY, endX, endY, linkColor, showArrow, arrowDir, gateway, targetGateway));
+        }
+
+        // Add capacity bubbles for each direction
+        const midX = (startX + endX) / 2;
+        const midY = (startY + endY) / 2;
+        
+        // Calculate direction for positioning bubbles
+        const linkDx = endX - startX;
+        const linkDy = endY - startY;
+        const linkLen = Math.sqrt(linkDx * linkDx + linkDy * linkDy);
+        const linkDirX = linkDx / linkLen;
+        const linkDirY = linkDy / linkLen;
+        const linkPerpX = -linkDy / linkLen;
+        const linkPerpY = linkDx / linkLen;
+        
+        // Current phase jumps vs max jumps per phase (JumpsPerDay is actually per phase/week)
+        const sourceCurrentJumps = gateway.CurrentPhaseJumps || 0;
+        const targetCurrentJumps = targetGateway.CurrentPhaseJumps || 0;
+        const sourceMaxJumps = gateway.JumpsPerDay || 250;
+        const targetMaxJumps = targetGateway.JumpsPerDay || 250;
+        
+        // Remaining jumps for each direction
+        const sourceRemainingJumps = Math.max(0, sourceMaxJumps - sourceCurrentJumps);
+        const targetRemainingJumps = Math.max(0, targetMaxJumps - targetCurrentJumps);
+        
+        // Color based on remaining capacity (inverse of usage)
+        const getCapacityColor = (remaining, max) => {
+          const ratio = max > 0 ? remaining / max : 0;
+          if (ratio >= 0.7) return '#22c55e'; // Green - plenty remaining
+          if (ratio >= 0.4) return '#eab308'; // Yellow
+          if (ratio >= 0.2) return '#f97316'; // Orange
+          return '#ef4444'; // Red - nearly full
+        };
+        
+        const sourceBubbleColor = getCapacityColor(sourceRemainingJumps, sourceMaxJumps);
+        const targetBubbleColor = getCapacityColor(targetRemainingJumps, targetMaxJumps);
+        const bubbleRadius = Math.max(12 / zoomLevel, 7);
+        const bubbleFontSize = Math.max(9 / zoomLevel, 5);
+        
+        // Position bubbles along the link - offset from center toward each gateway
+        const bubbleOffset = Math.max(20 / zoomLevel, 12);
+        const sourceBubbleX = midX - linkDirX * bubbleOffset;
+        const sourceBubbleY = midY - linkDirY * bubbleOffset;
+        const targetBubbleX = midX + linkDirX * bubbleOffset;
+        const targetBubbleY = midY + linkDirY * bubbleOffset;
+        
+        // Calculate fuel stats for circular fuel indicators
+        const sourceFuel = gateway.AvailableFuelUnits || 0;
+        const sourceMaxFuel = gateway.MaxFuelUnits || 25000;
+        const targetFuel = targetGateway.AvailableFuelUnits || 0;
+        const targetMaxFuel = targetGateway.MaxFuelUnits || 25000;
+        const sourceFuelRatio = sourceMaxFuel > 0 ? sourceFuel / sourceMaxFuel : 0;
+        const targetFuelRatio = targetMaxFuel > 0 ? targetFuel / targetMaxFuel : 0;
+        
+        // Fuel color based on ratio
+        const getFuelColor = (ratio) => {
+          if (ratio >= 0.5) return '#fbbf24'; // Gold/Yellow - good fuel
+          if (ratio >= 0.25) return '#f97316'; // Orange
+          if (ratio >= 0.1) return '#ef4444'; // Red
+          return '#991b1b'; // Dark red - critical
+        };
+        const sourceFuelColor = getFuelColor(sourceFuelRatio);
+        const targetFuelColor = getFuelColor(targetFuelRatio);
+        
+        // Circular fuel ring parameters
+        const fuelRingRadius = bubbleRadius + Math.max(4 / zoomLevel, 2.5);
+        const fuelRingWidth = Math.max(3 / zoomLevel, 2);
+        
+        // Helper to create arc path for circular progress
+        const createArcPath = (cx, cy, radius, startAngle, endAngle) => {
+          const start = {
+            x: cx + radius * Math.cos(startAngle),
+            y: cy + radius * Math.sin(startAngle)
+          };
+          const end = {
+            x: cx + radius * Math.cos(endAngle),
+            y: cy + radius * Math.sin(endAngle)
+          };
+          const largeArcFlag = endAngle - startAngle > Math.PI ? 1 : 0;
+          return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`;
+        };
+        
+        // Draw source bubble with circular fuel ring
+        const sourceBubbleGroup = gatewayLayer.append('g')
+          .attr('class', 'gateway-capacity-bubble')
+          .attr('data-gateway-link', linkKey)
+          .style('cursor', 'pointer');
+        
+        // Source fuel ring background (full circle)
+        sourceBubbleGroup.append('circle')
+          .attr('cx', sourceBubbleX)
+          .attr('cy', sourceBubbleY)
+          .attr('r', fuelRingRadius)
+          .attr('fill', 'none')
+          .attr('stroke', 'rgba(0,0,0,0.5)')
+          .attr('stroke-width', fuelRingWidth)
+          .attr('opacity', 0.8);
+        
+        // Source fuel ring fill (arc based on fuel ratio)
+        if (sourceFuelRatio > 0) {
+          const startAngle = -Math.PI / 2; // Start at top
+          const endAngle = startAngle + (2 * Math.PI * Math.min(sourceFuelRatio, 0.999));
+          sourceBubbleGroup.append('path')
+            .attr('d', createArcPath(sourceBubbleX, sourceBubbleY, fuelRingRadius, startAngle, endAngle))
+            .attr('fill', 'none')
+            .attr('stroke', sourceFuelColor)
+            .attr('stroke-width', fuelRingWidth)
+            .attr('stroke-linecap', 'round')
+            .attr('opacity', 0.95);
+        }
+        
+        // Source bubble circle (inner)
+        sourceBubbleGroup.append('circle')
+          .attr('cx', sourceBubbleX)
+          .attr('cy', sourceBubbleY)
+          .attr('r', bubbleRadius)
+          .attr('fill', sourceBubbleColor)
+          .attr('stroke', '#ffffff')
+          .attr('stroke-width', Math.max(1.5 / zoomLevel, 0.8))
+          .attr('opacity', 0.95);
+        
+        // Directional triangle pointing toward source (the destination for this bubble)
+        const sourceTriangleSize = Math.max(8 / zoomLevel, 5);
+        const sourceTriangleOffset = bubbleRadius + sourceTriangleSize * 0.7;
+        // Point toward source gateway (negative direction along link)
+        const sourceTriangleTipX = sourceBubbleX - linkDirX * sourceTriangleOffset;
+        const sourceTriangleTipY = sourceBubbleY - linkDirY * sourceTriangleOffset;
+        const sourceTriangleBaseX = sourceBubbleX - linkDirX * (sourceTriangleOffset - sourceTriangleSize);
+        const sourceTriangleBaseY = sourceBubbleY - linkDirY * (sourceTriangleOffset - sourceTriangleSize);
+        const sourceTrianglePerpOffset = sourceTriangleSize * 0.6;
+        
+        sourceBubbleGroup.append('polygon')
+          .attr('points', [
+            `${sourceTriangleTipX},${sourceTriangleTipY}`,
+            `${sourceTriangleBaseX + linkPerpX * sourceTrianglePerpOffset},${sourceTriangleBaseY + linkPerpY * sourceTrianglePerpOffset}`,
+            `${sourceTriangleBaseX - linkPerpX * sourceTrianglePerpOffset},${sourceTriangleBaseY - linkPerpY * sourceTrianglePerpOffset}`
+          ].join(' '))
+          .attr('fill', sourceBubbleColor)
+          .attr('stroke', '#ffffff')
+          .attr('stroke-width', Math.max(1 / zoomLevel, 0.5))
+          .attr('opacity', 0.95);
+        
+        sourceBubbleGroup.append('text')
+          .attr('x', sourceBubbleX)
+          .attr('y', sourceBubbleY)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'central')
+          .attr('fill', '#ffffff')
+          .attr('font-size', `${bubbleFontSize}px`)
+          .attr('font-weight', 700)
+          .attr('stroke', '#000000')
+          .attr('stroke-width', Math.max(0.5 / zoomLevel, 0.3))
+          .attr('paint-order', 'stroke')
+          .text(sourceRemainingJumps > 999 ? '999+' : sourceRemainingJumps);
+        
+        // Draw target direction bubble (closer to target gateway)
+        const targetBubbleGroup = gatewayLayer.append('g')
+          .attr('class', 'gateway-capacity-bubble')
+          .attr('data-gateway-link', linkKey)
+          .style('cursor', 'pointer');
+        
+        // Target fuel ring background (full circle)
+        targetBubbleGroup.append('circle')
+          .attr('cx', targetBubbleX)
+          .attr('cy', targetBubbleY)
+          .attr('r', fuelRingRadius)
+          .attr('fill', 'none')
+          .attr('stroke', 'rgba(0,0,0,0.5)')
+          .attr('stroke-width', fuelRingWidth)
+          .attr('opacity', 0.8);
+        
+        // Target fuel ring fill (arc based on fuel ratio)
+        if (targetFuelRatio > 0) {
+          const startAngle = -Math.PI / 2; // Start at top
+          const endAngle = startAngle + (2 * Math.PI * Math.min(targetFuelRatio, 0.999));
+          targetBubbleGroup.append('path')
+            .attr('d', createArcPath(targetBubbleX, targetBubbleY, fuelRingRadius, startAngle, endAngle))
+            .attr('fill', 'none')
+            .attr('stroke', targetFuelColor)
+            .attr('stroke-width', fuelRingWidth)
+            .attr('stroke-linecap', 'round')
+            .attr('opacity', 0.95);
+        }
+        
+        // Target bubble circle (inner)
+        targetBubbleGroup.append('circle')
+          .attr('cx', targetBubbleX)
+          .attr('cy', targetBubbleY)
+          .attr('r', bubbleRadius)
+          .attr('fill', targetBubbleColor)
+          .attr('stroke', '#ffffff')
+          .attr('stroke-width', Math.max(1.5 / zoomLevel, 0.8))
+          .attr('opacity', 0.95);
+        
+        // Directional triangle pointing toward target (the destination for this bubble)
+        const targetTriangleSize = Math.max(8 / zoomLevel, 5);
+        const targetTriangleOffset = bubbleRadius + targetTriangleSize * 0.7;
+        // Point toward target gateway (positive direction along link)
+        const targetTriangleTipX = targetBubbleX + linkDirX * targetTriangleOffset;
+        const targetTriangleTipY = targetBubbleY + linkDirY * targetTriangleOffset;
+        const targetTriangleBaseX = targetBubbleX + linkDirX * (targetTriangleOffset - targetTriangleSize);
+        const targetTriangleBaseY = targetBubbleY + linkDirY * (targetTriangleOffset - targetTriangleSize);
+        const targetTrianglePerpOffset = targetTriangleSize * 0.6;
+        
+        targetBubbleGroup.append('polygon')
+          .attr('points', [
+            `${targetTriangleTipX},${targetTriangleTipY}`,
+            `${targetTriangleBaseX + linkPerpX * targetTrianglePerpOffset},${targetTriangleBaseY + linkPerpY * targetTrianglePerpOffset}`,
+            `${targetTriangleBaseX - linkPerpX * targetTrianglePerpOffset},${targetTriangleBaseY - linkPerpY * targetTrianglePerpOffset}`
+          ].join(' '))
+          .attr('fill', targetBubbleColor)
+          .attr('stroke', '#ffffff')
+          .attr('stroke-width', Math.max(1 / zoomLevel, 0.5))
+          .attr('opacity', 0.95);
+        
+        targetBubbleGroup.append('text')
+          .attr('x', targetBubbleX)
+          .attr('y', targetBubbleY)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'central')
+          .attr('fill', '#ffffff')
+          .attr('font-size', `${bubbleFontSize}px`)
+          .attr('font-weight', 700)
+          .attr('stroke', '#000000')
+          .attr('stroke-width', Math.max(0.5 / zoomLevel, 0.3))
+          .attr('paint-order', 'stroke')
+          .text(targetRemainingJumps > 999 ? '999+' : targetRemainingJumps);
+
+        // Add hover tooltip to all link paths and bubbles
+        const allHoverables = [...linkPaths];
+        // Add bubble groups to hoverables
+        allHoverables.push(sourceBubbleGroup);
+        allHoverables.push(targetBubbleGroup);
+        
+        allHoverables.forEach(element => {
+          element
+            .on('mouseover', function(event) {
+              // Highlight all paths for this link
+              gatewayLayer.selectAll(`[data-gateway-link="${linkKey}"]`)
+                .filter('path')
+                .attr('stroke-opacity', 1)
+                .attr('stroke-width', strokeWidth * 1.5);
+
+            // Calculate fuel-based potential jumps for tooltip
+            const sourceJumpsFromFuel = gateway.FuelPerJump && gateway.AvailableFuelUnits 
+              ? Math.floor(gateway.AvailableFuelUnits / gateway.FuelPerJump) 
+              : 0;
+            const targetJumpsFromFuel = targetGateway.FuelPerJump && targetGateway.AvailableFuelUnits 
+              ? Math.floor(targetGateway.AvailableFuelUnits / targetGateway.FuelPerJump) 
+              : 0;
+            
+            const tooltipHtml = [
+              '<div style="background: rgba(15, 23, 42, 0.95); padding: 20px 24px; border-radius: 8px; border: 1px solid #334155; box-shadow: 0 6px 16px rgba(0,0,0,0.5); max-width: 480px; font-family: system-ui, -apple-system, sans-serif;">',
+              `<div style="color: #f7a600; font-weight: 700; font-size: 16px; margin-bottom: 13px; letter-spacing: 0.7px;">GATEWAY LINK</div>`,
+              // Directional capacity summary
+              `<div style="display: flex; gap: 10px; margin-bottom: 13px;">`,
+              `<div style="flex: 1; background: ${sourceBubbleColor}22; border: 1px solid ${sourceBubbleColor}; border-radius: 6px; padding: 8px 11px; text-align: center;">`,
+              `<div style="color: #f7a600; font-size: 10px; margin-bottom: 3px;">« TO ${gateway.LocationPlanetName || gateway.LocationNaturalId}</div>`,
+              `<div style="color: ${sourceBubbleColor}; font-size: 20px; font-weight: 700;">${sourceRemainingJumps}</div>`,
+              `<div style="color: #94a3b8; font-size: 9px;">${sourceCurrentJumps} / ${sourceMaxJumps} used</div>`,
+              `<div style="color: ${sourceFuelColor}; font-size: 9px; margin-top: 3px;">⛽ ${Math.round(sourceFuelRatio * 100)}%</div>`,
+              '</div>',
+              `<div style="flex: 1; background: ${targetBubbleColor}22; border: 1px solid ${targetBubbleColor}; border-radius: 6px; padding: 8px 11px; text-align: center;">`,
+              `<div style="color: #f7a600; font-size: 10px; margin-bottom: 3px;">TO ${targetGateway.LocationPlanetName || targetGateway.LocationNaturalId} »</div>`,
+              `<div style="color: ${targetBubbleColor}; font-size: 20px; font-weight: 700;">${targetRemainingJumps}</div>`,
+              `<div style="color: #94a3b8; font-size: 9px;">${targetCurrentJumps} / ${targetMaxJumps} used</div>`,
+              `<div style="color: ${targetFuelColor}; font-size: 9px; margin-top: 3px;">⛽ ${Math.round(targetFuelRatio * 100)}%</div>`,
+              '</div>',
+              '</div>',
+              '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">',
+              // Source gateway
+              '<div style="border-right: 1px solid #334155; padding-right: 19px;">',
+              `<div style="color: #ffffff; font-weight: 600; font-size: 14px; margin-bottom: 8px;">${gateway.Name || gateway.NaturalId}</div>`,
+              `<div style="color: #94a3b8; font-size: 12px;">📍 ${gateway.LocationPlanetName || gateway.LocationNaturalId}</div>`,
+              `<div style="color: ${sourceOperational ? '#4ade80' : '#f87171'}; font-size: 12px; margin-top: 5px;">${sourceOperational ? '● Operational' : '○ ' + gateway.OperationalState}</div>`,
+              `<div style="color: #bfdbfe; font-size: 12px; margin-top: 8px;">Volume: ${gateway.MaxShipVolume?.toLocaleString()} m³</div>`,
+              `<div style="color: #c4b5fd; font-size: 12px;">Upgrades: ${gateway.VolumeUpgrades || 0}</div>`,
+              `<div style="color: ${sourceFuelColor}; font-size: 12px; margin-top: 5px;">⛽ ${gateway.AvailableFuelUnits?.toLocaleString() || 0} / ${gateway.MaxFuelUnits?.toLocaleString() || 0}</div>`,
+              `<div style="color: #22c55e; font-size: 12px;">🚀 ${sourceJumpsFromFuel} from fuel</div>`,
+              '</div>',
+              // Target gateway
+              '<div>',
+              `<div style="color: #ffffff; font-weight: 600; font-size: 14px; margin-bottom: 8px;">${targetGateway.Name || targetGateway.NaturalId}</div>`,
+              `<div style="color: #94a3b8; font-size: 12px;">📍 ${targetGateway.LocationPlanetName || targetGateway.LocationNaturalId}</div>`,
+              `<div style="color: ${targetOperational ? '#4ade80' : '#f87171'}; font-size: 12px; margin-top: 5px;">${targetOperational ? '● Operational' : '○ ' + targetGateway.OperationalState}</div>`,
+              `<div style="color: #bfdbfe; font-size: 12px; margin-top: 8px;">Volume: ${targetGateway.MaxShipVolume?.toLocaleString()} m³</div>`,
+              `<div style="color: #c4b5fd; font-size: 12px;">Upgrades: ${targetGateway.VolumeUpgrades || 0}</div>`,
+              `<div style="color: ${targetFuelColor}; font-size: 12px; margin-top: 5px;">⛽ ${targetGateway.AvailableFuelUnits?.toLocaleString() || 0} / ${targetGateway.MaxFuelUnits?.toLocaleString() || 0}</div>`,
+              `<div style="color: #22c55e; font-size: 12px;">🚀 ${targetJumpsFromFuel} from fuel</div>`,
+              '</div>',
+              '</div>',
+              hasVolumeDifference && isBidirectional
+                ? `<div style="color: #fbbf24; font-size: 12px; margin-top: 13px; padding-top: 11px; border-top: 1px solid #334155; text-align: center;">⚡ Asymmetric Capacity (${sourceVolumeUpgrades} ↔ ${targetVolumeUpgrades} upgrades)</div>`
+                : `<div style="color: #64748b; font-size: 12px; margin-top: 13px; padding-top: 11px; border-top: 1px solid #334155; text-align: center;">${isBidirectional ? '↔ Bidirectional' : '→ Unidirectional'}</div>`,
+              '</div>'
+            ].join('');
+
+            d3.select('body').append('div')
+              .attr('class', 'gateway-tooltip')
+              .style('position', 'fixed')
+              .style('left', (event.clientX + 20) + 'px')
+              .style('top', (event.clientY - 15) + 'px')
+              .style('pointer-events', 'none')
+              .style('z-index', 10000)
+              .html(tooltipHtml);
+          })
+          .on('mouseout', function() {
+            // Reset all paths for this link
+            gatewayLayer.selectAll(`[data-gateway-link="${linkKey}"]`)
+              .filter('path')
+              .attr('stroke-opacity', 0.85)
+              .attr('stroke-width', strokeWidth);
+            d3.selectAll('.gateway-tooltip').remove();
+          });
+        });
+      });
+
+      // Draw gateway markers at system locations
+      const gatewaySystemLocations = new Map();
+      gatewayData.forEach(gateway => {
+        const systemNatId = gateway.LocationNaturalId?.match(/^([A-Z]{2}-\d{3})/i)?.[1]?.toUpperCase();
+        if (!systemNatId) return;
+        
+        const systemId = systemIdByNaturalId[systemNatId] || systemIdByNaturalId[systemNatId.toLowerCase()];
+        if (!systemId || !graph.systems[systemId]) return;
+
+        if (!gatewaySystemLocations.has(systemId)) {
+          gatewaySystemLocations.set(systemId, []);
+        }
+        gatewaySystemLocations.get(systemId).push(gateway);
+      });
+
+      gatewaySystemLocations.forEach((gateways, systemId) => {
+        const system = graph.systems[systemId];
+        const markerSize = Math.max(8 / zoomLevel, 4);
+        
+        // Draw a small gateway indicator
+        gatewayLayer.append('circle')
+          .attr('cx', system.x)
+          .attr('cy', system.y)
+          .attr('r', markerSize)
+          .attr('fill', 'none')
+          .attr('stroke', '#f7a600')
+          .attr('stroke-width', Math.max(2 / zoomLevel, 1))
+          .attr('stroke-dasharray', `${3 / zoomLevel} ${2 / zoomLevel}`)
+          .attr('opacity', 0.8);
+      });
+    }
 
     const shipsById = new Map();
     (combinedShips || []).forEach((ship) => {
@@ -5263,7 +5781,7 @@ const DataPointOverlay = ({ mapRef }) => {
       addBarHoverEffects(densityBar, 'Density', density, densityColorScale);
       addBarHoverEffects(luminosityBar, 'Luminosity', luminosity, luminosityColorScale);
     });
-  }, [mapRef, isOverlayVisible, isLoading, error, meteorDensityData, luminosityData, systemNames, maxValues, combinedShips, combinedFlights, graph, selectedShipId, planetLookups, systemLookups, showShipLabels, getShipLoadInfoById, getLoadColorForRatio, buildLoadSummary, buildShipmentTiles, buildLoadBarDescriptors, formatCapacityValue, partnerFilterActive, partnerFilteredShipments, filterShipmentsByPartner, systemShipmentCounts]);
+  }, [mapRef, isOverlayVisible, isLoading, error, meteorDensityData, luminosityData, systemNames, maxValues, combinedShips, combinedFlights, graph, selectedShipId, planetLookups, systemLookups, showShipLabels, getShipLoadInfoById, getLoadColorForRatio, buildLoadSummary, buildShipmentTiles, buildLoadBarDescriptors, formatCapacityValue, partnerFilterActive, partnerFilteredShipments, filterShipmentsByPartner, systemShipmentCounts, isGatewayLayerVisible, gatewayData, systemIdByNaturalId]);
 
   useEffect(() => {
     renderOverlay();

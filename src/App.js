@@ -3,6 +3,7 @@ import UniverseMap from './components/UniverseMap';
 import Sidebar from './components/Sidebar';
 import PathfindingToggle from './components/PathfindingToggle';
 import MeteorDensityToggle from './components/MeteorDensityToggle';
+import GatewayToggle from './components/GatewayToggle';
 import SearchField from './components/SearchField';
 import MaterialSearchField from './components/MaterialSearchField';
 import FilterCategories from './components/FilterCategories';
@@ -110,6 +111,9 @@ const AppContent = ({ showFilters, setShowFilters, isLoginOpen, onOpenLogin, onC
             </div>
             <div className="pathfinding-toggle-container">
               <MeteorDensityToggle />
+            </div>
+            <div className="pathfinding-toggle-container">
+              <GatewayToggle />
             </div>
           </div>
         </div>

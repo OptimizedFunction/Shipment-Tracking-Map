@@ -32,21 +32,21 @@
     "UpgraderName": null,
     "UpgraderCode": null,
     "FuelPerJump": 30,
-    "AvailableFuelUnits": 3344,
+    "AvailableFuelUnits": 3194,
     "MaxFuelUnits": 25000,
     "AverageFuelAvailibility": 1,
     "UsageAmount": 6000,
     "UsageCurrency": "AIC",
-    "Jumps": 347,
-    "TotalJumps": 347,
+    "Jumps": 352,
+    "TotalJumps": 352,
     "CurrentPhaseStart": "2026-01-25T06:16:06.341Z",
     "CurrentPhaseEnd": "2026-02-01T06:16:06.341Z",
     "CurrentPhaseNaturalId": 6,
-    "CurrentPhaseJumps": 7,
+    "CurrentPhaseJumps": 12,
     "CurrentPhaseJumpsFailedDueInoperative": 0,
     "CurrentPhaseJumpsFailedDueInsufficientFuel": 0,
     "CurrentPhaseJumpsFailedDueNoCapacity": 0,
-    "CurrentPhaseInboundJumps": 8,
+    "CurrentPhaseInboundJumps": 13,
     "LastPhaseStart": "2026-01-18T06:16:06.341Z",
     "LastPhaseEnd": "2026-01-25T06:16:06.341Z",
     "LastPhaseNaturalId": 5,
@@ -63,42 +63,246 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": 0,
     "PhaseAverageJumpsFailedDueNoCapacity": 0,
     "PhaseAverageInboundJumps": 89,
-    "Upkeeps": [
+    "Upkeeps": [],
+    "UpkeepPhases": [
       {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 15
+        "GatewayUpkeepPhaseId": "27fa0652fcd610f63149d1927149eb5e",
+        "NaturalId": 5,
+        "Start": "2026-01-18T06:16:06.341Z",
+        "End": "2026-01-25T06:16:06.341Z",
+        "ServiceLevel": 1,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 15,
+            "Required": 15
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 6,
+            "Required": 6
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 60,
+            "Required": 60
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 6,
+            "Required": 6
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 15,
+            "Required": 15
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 60,
+            "Required": 60
+          }
+        ]
       },
       {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 6
+        "GatewayUpkeepPhaseId": "81e544e819c1e95d2b5f10ddddaa87ae",
+        "NaturalId": 4,
+        "Start": "2026-01-11T06:16:06.341Z",
+        "End": "2026-01-18T06:16:06.341Z",
+        "ServiceLevel": 1,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 12,
+            "Required": 12
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 48,
+            "Required": 48
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 12,
+            "Required": 12
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 48,
+            "Required": 48
+          }
+        ]
       },
       {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 60
+        "GatewayUpkeepPhaseId": "1a4a0f2a59fa0c1bb1c54b6d5626262c",
+        "NaturalId": 3,
+        "Start": "2026-01-04T06:16:06.341Z",
+        "End": "2026-01-11T06:16:06.341Z",
+        "ServiceLevel": 1,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 12,
+            "Required": 12
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 48,
+            "Required": 48
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 12,
+            "Required": 12
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 48,
+            "Required": 48
+          }
+        ]
       },
       {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 60
+        "GatewayUpkeepPhaseId": "173fda8197b875153c2afcd2e8c4f236",
+        "NaturalId": 6,
+        "Start": "2026-01-25T06:16:06.341Z",
+        "End": "2026-02-01T06:16:06.341Z",
+        "ServiceLevel": 1,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 15,
+            "Required": 15
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 6,
+            "Required": 6
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 60,
+            "Required": 60
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 6,
+            "Required": 6
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 15,
+            "Required": 15
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 60,
+            "Required": 60
+          }
+        ]
       },
       {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 15
+        "GatewayUpkeepPhaseId": "e60710c500be6a61965fa55cb642f636",
+        "NaturalId": 2,
+        "Start": "2025-12-28T06:16:06.341Z",
+        "End": "2026-01-04T06:16:06.341Z",
+        "ServiceLevel": 0.599814957010582,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 12,
+            "Required": 12
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 48,
+            "Required": 48
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 12,
+            "Required": 12
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 48,
+            "Required": 48
+          }
+        ]
       },
       {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 6
+        "GatewayUpkeepPhaseId": "b1b2131359925cae1293ab583b4e2b97",
+        "NaturalId": 1,
+        "Start": "2025-12-21T06:16:06.341Z",
+        "End": "2025-12-28T06:16:06.341Z",
+        "ServiceLevel": 0,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 0,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 0,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 0,
+            "Required": 40
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 0,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 0,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 0,
+            "Required": 40
+          }
+        ]
       }
     ],
-    "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0.7666358261684304,
-    "Timestamp": "2026-01-25T15:27:08.490366Z"
+    "Timestamp": "2026-01-25T18:17:17.667926Z"
   },
   {
     "GatewayId": "093a636ea1d0a0b69dfa66f5166473aa",
@@ -133,21 +337,21 @@
     "UpgraderName": null,
     "UpgraderCode": null,
     "FuelPerJump": 30,
-    "AvailableFuelUnits": 7270,
+    "AvailableFuelUnits": 7090,
     "MaxFuelUnits": 25000,
     "AverageFuelAvailibility": 1,
     "UsageAmount": 1400,
     "UsageCurrency": "NCC",
-    "Jumps": 591,
-    "TotalJumps": 591,
+    "Jumps": 597,
+    "TotalJumps": 597,
     "CurrentPhaseStart": "2026-01-22T00:49:49.295Z",
     "CurrentPhaseEnd": "2026-01-29T00:49:49.295Z",
     "CurrentPhaseNaturalId": 6,
-    "CurrentPhaseJumps": 64,
+    "CurrentPhaseJumps": 70,
     "CurrentPhaseJumpsFailedDueInoperative": 0,
     "CurrentPhaseJumpsFailedDueInsufficientFuel": 0,
     "CurrentPhaseJumpsFailedDueNoCapacity": 0,
-    "CurrentPhaseInboundJumps": 71,
+    "CurrentPhaseInboundJumps": 76,
     "LastPhaseStart": "2026-01-15T00:49:49.295Z",
     "LastPhaseEnd": "2026-01-22T00:49:49.295Z",
     "LastPhaseNaturalId": 5,
@@ -164,42 +368,246 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": 0,
     "PhaseAverageJumpsFailedDueNoCapacity": 0,
     "PhaseAverageInboundJumps": 106,
-    "Upkeeps": [
+    "Upkeeps": [],
+    "UpkeepPhases": [
       {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 11
+        "GatewayUpkeepPhaseId": "f0436801afb1d80ee906db34fa8e071b",
+        "NaturalId": 6,
+        "Start": "2026-01-22T00:49:49.295Z",
+        "End": "2026-01-29T00:49:49.295Z",
+        "ServiceLevel": 1,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 44,
+            "Required": 44
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 44,
+            "Required": 44
+          }
+        ]
       },
       {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
+        "GatewayUpkeepPhaseId": "262e402f5491bba6d142b84c63a51dfd",
+        "NaturalId": 1,
+        "Start": "2025-12-18T00:49:49.295Z",
+        "End": "2025-12-25T00:49:49.295Z",
+        "ServiceLevel": 0.7675313492063492,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 10,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 40,
+            "Required": 40
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 10,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 40,
+            "Required": 40
+          }
+        ]
       },
       {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 11
+        "GatewayUpkeepPhaseId": "c2771ac1977891099b314e884907964c",
+        "NaturalId": 2,
+        "Start": "2025-12-25T00:49:49.295Z",
+        "End": "2026-01-01T00:49:49.295Z",
+        "ServiceLevel": 1,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 44,
+            "Required": 44
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 44,
+            "Required": 44
+          }
+        ]
       },
       {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 44
+        "GatewayUpkeepPhaseId": "42eb32710809fdabe00316c817b219ca",
+        "NaturalId": 3,
+        "Start": "2026-01-01T00:49:49.295Z",
+        "End": "2026-01-08T00:49:49.295Z",
+        "ServiceLevel": 1,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 44,
+            "Required": 44
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 44,
+            "Required": 44
+          }
+        ]
       },
       {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
+        "GatewayUpkeepPhaseId": "47e248648ed8e7dfd23fb10d270e6a71",
+        "NaturalId": 4,
+        "Start": "2026-01-08T00:49:49.295Z",
+        "End": "2026-01-15T00:49:49.295Z",
+        "ServiceLevel": 0.9641047966269841,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 44,
+            "Required": 44
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 44,
+            "Required": 44
+          }
+        ]
       },
       {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 44
+        "GatewayUpkeepPhaseId": "4d9f03209e5d9872a7f8a85749cae9bd",
+        "NaturalId": 5,
+        "Start": "2026-01-15T00:49:49.295Z",
+        "End": "2026-01-22T00:49:49.295Z",
+        "ServiceLevel": 1,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 44,
+            "Required": 44
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 44,
+            "Required": 44
+          }
+        ]
       }
     ],
-    "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0.9552726909722221,
-    "Timestamp": "2026-01-25T15:27:08.490288Z"
+    "Timestamp": "2026-01-25T18:17:17.667822Z"
   },
   {
     "GatewayId": "022e954830522f42f46263883923566e",
@@ -263,42 +671,90 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": 0,
     "PhaseAverageJumpsFailedDueNoCapacity": 0,
     "PhaseAverageInboundJumps": 0,
-    "Upkeeps": [
+    "Upkeeps": [],
+    "UpkeepPhases": [
       {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 5
+        "GatewayUpkeepPhaseId": "ce4987b2a536c1946578d7aa30d0bcef",
+        "NaturalId": 1,
+        "Start": "2026-01-18T02:07:38.326Z",
+        "End": "2026-01-25T02:07:38.326Z",
+        "ServiceLevel": 0,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 0,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 0,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 0,
+            "Required": 40
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 0,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 0,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 0,
+            "Required": 40
+          }
+        ]
       },
       {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 13
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 5
-      },
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 13
-      },
-      {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 52
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 52
+        "GatewayUpkeepPhaseId": "fe570988792900fa83aca796d5101b5f",
+        "NaturalId": 2,
+        "Start": "2026-01-25T02:07:38.326Z",
+        "End": "2026-02-01T02:07:38.326Z",
+        "ServiceLevel": 0,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 0,
+            "Required": 13
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 0,
+            "Required": 5
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 0,
+            "Required": 52
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 0,
+            "Required": 5
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 0,
+            "Required": 13
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 0,
+            "Required": 52
+          }
+        ]
       }
     ],
-    "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0,
-    "Timestamp": "2026-01-25T15:27:08.490373Z"
+    "Timestamp": "2026-01-25T18:17:17.667945Z"
   },
   {
     "GatewayId": "786c2bcc4bdcb6a5fd883d958865ca14",
@@ -362,42 +818,11 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": null,
     "PhaseAverageJumpsFailedDueNoCapacity": null,
     "PhaseAverageInboundJumps": null,
-    "Upkeeps": [
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 40
-      }
-    ],
+    "Upkeeps": [],
     "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0,
-    "Timestamp": "2026-01-25T15:27:08.490377Z"
+    "Timestamp": "2026-01-25T18:17:17.667948Z"
   },
   {
     "GatewayId": "c30399fb00d79c7282317c4113209434",
@@ -461,42 +886,11 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": null,
     "PhaseAverageJumpsFailedDueNoCapacity": null,
     "PhaseAverageInboundJumps": null,
-    "Upkeeps": [
-      {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 10
-      }
-    ],
+    "Upkeeps": [],
     "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0,
-    "Timestamp": "2026-01-25T15:27:08.49038Z"
+    "Timestamp": "2026-01-25T18:17:17.667955Z"
   },
   {
     "GatewayId": "cc3295356a133b3caf827ebbe62fe27b",
@@ -560,42 +954,11 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": null,
     "PhaseAverageJumpsFailedDueNoCapacity": null,
     "PhaseAverageInboundJumps": null,
-    "Upkeeps": [
-      {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 10
-      }
-    ],
+    "Upkeeps": [],
     "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0,
-    "Timestamp": "2026-01-25T15:27:08.490319Z"
+    "Timestamp": "2026-01-25T18:17:17.667757Z"
   },
   {
     "GatewayId": "56d06db0cab1c02b39871ee0e8ee14d7",
@@ -659,42 +1022,11 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": null,
     "PhaseAverageJumpsFailedDueNoCapacity": null,
     "PhaseAverageInboundJumps": null,
-    "Upkeeps": [
-      {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 10
-      }
-    ],
+    "Upkeeps": [],
     "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0,
-    "Timestamp": "2026-01-25T15:27:08.490381Z"
+    "Timestamp": "2026-01-25T18:17:17.667932Z"
   },
   {
     "GatewayId": "a3bd1caa36dbd5b5973edfd343c29255",
@@ -758,42 +1090,11 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": null,
     "PhaseAverageJumpsFailedDueNoCapacity": null,
     "PhaseAverageInboundJumps": null,
-    "Upkeeps": [
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
-      }
-    ],
+    "Upkeeps": [],
     "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0,
-    "Timestamp": "2026-01-25T15:27:08.490352Z"
+    "Timestamp": "2026-01-25T18:17:17.667853Z"
   },
   {
     "GatewayId": "3bcb9e846c8d8820fd084b2483476d7e",
@@ -857,42 +1158,11 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": null,
     "PhaseAverageJumpsFailedDueNoCapacity": null,
     "PhaseAverageInboundJumps": null,
-    "Upkeeps": [
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 10
-      }
-    ],
+    "Upkeeps": [],
     "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0,
-    "Timestamp": "2026-01-25T15:27:08.490378Z"
+    "Timestamp": "2026-01-25T18:17:17.66795Z"
   },
   {
     "GatewayId": "0707e321845e1282733b1f96a3faa3a2",
@@ -956,42 +1226,11 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": null,
     "PhaseAverageJumpsFailedDueNoCapacity": null,
     "PhaseAverageInboundJumps": null,
-    "Upkeeps": [
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 40
-      }
-    ],
+    "Upkeeps": [],
     "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0,
-    "Timestamp": "2026-01-25T15:27:08.490384Z"
+    "Timestamp": "2026-01-25T18:17:17.667875Z"
   },
   {
     "GatewayId": "06f20d211cc604f93dba841adb4c3f40",
@@ -1055,42 +1294,51 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": null,
     "PhaseAverageJumpsFailedDueNoCapacity": null,
     "PhaseAverageInboundJumps": null,
-    "Upkeeps": [
+    "Upkeeps": [],
+    "UpkeepPhases": [
       {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 10
+        "GatewayUpkeepPhaseId": "ddb6d095bbfb60c932c5b242d1a504bd",
+        "NaturalId": 1,
+        "Start": "2026-01-23T12:43:54.953Z",
+        "End": "2026-01-30T12:43:54.953Z",
+        "ServiceLevel": 0,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 0,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 0,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 0,
+            "Required": 40
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 0,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 0,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 0,
+            "Required": 40
+          }
+        ]
       }
     ],
-    "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0,
-    "Timestamp": "2026-01-25T15:27:08.49033Z"
+    "Timestamp": "2026-01-25T18:17:17.667855Z"
   },
   {
     "GatewayId": "6e9110815976058e29fc4b3c91b09d0f",
@@ -1154,42 +1402,11 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": null,
     "PhaseAverageJumpsFailedDueNoCapacity": null,
     "PhaseAverageInboundJumps": null,
-    "Upkeeps": [
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 40
-      }
-    ],
+    "Upkeeps": [],
     "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0,
-    "Timestamp": "2026-01-25T15:27:08.490382Z"
+    "Timestamp": "2026-01-25T18:17:17.667872Z"
   },
   {
     "GatewayId": "f74bbe3db752ad58b9d43274bae270dc",
@@ -1253,42 +1470,90 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": 0,
     "PhaseAverageJumpsFailedDueNoCapacity": 0,
     "PhaseAverageInboundJumps": 0,
-    "Upkeeps": [
+    "Upkeeps": [],
+    "UpkeepPhases": [
       {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 40
+        "GatewayUpkeepPhaseId": "6418cd19f3b8fa4f2cd20660e4aef91c",
+        "NaturalId": 2,
+        "Start": "2026-01-24T02:24:53.483Z",
+        "End": "2026-01-31T02:24:53.483Z",
+        "ServiceLevel": 0,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 0,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 0,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 0,
+            "Required": 40
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 0,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 0,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 0,
+            "Required": 40
+          }
+        ]
       },
       {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 10
+        "GatewayUpkeepPhaseId": "6579c27c7d6d2a0d8b74635ea73ffd22",
+        "NaturalId": 1,
+        "Start": "2026-01-17T02:24:53.483Z",
+        "End": "2026-01-24T02:24:53.483Z",
+        "ServiceLevel": 0,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 0,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 0,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 0,
+            "Required": 40
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 0,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 0,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 0,
+            "Required": 40
+          }
+        ]
       }
     ],
-    "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0,
-    "Timestamp": "2026-01-25T15:27:08.490356Z"
+    "Timestamp": "2026-01-25T18:17:17.667907Z"
   },
   {
     "GatewayId": "6d5799234bab65ab9dc6fda58de70909",
@@ -1352,42 +1617,11 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": null,
     "PhaseAverageJumpsFailedDueNoCapacity": null,
     "PhaseAverageInboundJumps": null,
-    "Upkeeps": [
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
-      }
-    ],
+    "Upkeeps": [],
     "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0,
-    "Timestamp": "2026-01-25T15:27:08.49037Z"
+    "Timestamp": "2026-01-25T18:17:17.667931Z"
   },
   {
     "GatewayId": "e1b7cd3448518b9e2badabe0f543a5eb",
@@ -1422,21 +1656,21 @@
     "UpgraderName": null,
     "UpgraderCode": null,
     "FuelPerJump": 30,
-    "AvailableFuelUnits": 19599,
+    "AvailableFuelUnits": 19449,
     "MaxFuelUnits": 25000,
     "AverageFuelAvailibility": 0.9521178637200737,
     "UsageAmount": 6000,
     "UsageCurrency": "AIC",
-    "Jumps": 483,
-    "TotalJumps": 483,
+    "Jumps": 488,
+    "TotalJumps": 488,
     "CurrentPhaseStart": "2026-01-20T04:46:42.194Z",
     "CurrentPhaseEnd": "2026-01-27T04:46:42.194Z",
     "CurrentPhaseNaturalId": 4,
-    "CurrentPhaseJumps": 117,
+    "CurrentPhaseJumps": 122,
     "CurrentPhaseJumpsFailedDueInoperative": 0,
     "CurrentPhaseJumpsFailedDueInsufficientFuel": 0,
     "CurrentPhaseJumpsFailedDueNoCapacity": 0,
-    "CurrentPhaseInboundJumps": 123,
+    "CurrentPhaseInboundJumps": 128,
     "LastPhaseStart": "2026-01-13T04:46:42.194Z",
     "LastPhaseEnd": "2026-01-20T04:46:42.194Z",
     "LastPhaseNaturalId": 3,
@@ -1453,42 +1687,168 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": 8,
     "PhaseAverageJumpsFailedDueNoCapacity": 0,
     "PhaseAverageInboundJumps": 74,
-    "Upkeeps": [
+    "Upkeeps": [],
+    "UpkeepPhases": [
       {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 5
+        "GatewayUpkeepPhaseId": "fdf47903ff0eae9b3fc55ab4b9f94db7",
+        "NaturalId": 2,
+        "Start": "2026-01-06T04:46:42.194Z",
+        "End": "2026-01-13T04:46:42.194Z",
+        "ServiceLevel": 1,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 12,
+            "Required": 12
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 48,
+            "Required": 48
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 12,
+            "Required": 12
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 48,
+            "Required": 48
+          }
+        ]
       },
       {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 52
+        "GatewayUpkeepPhaseId": "0419d8409d5129004cea93b5d5c90240",
+        "NaturalId": 1,
+        "Start": "2025-12-30T04:46:42.194Z",
+        "End": "2026-01-06T04:46:42.194Z",
+        "ServiceLevel": 0.8685508217592592,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 10,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 40,
+            "Required": 40
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 10,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 40,
+            "Required": 40
+          }
+        ]
       },
       {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 13
+        "GatewayUpkeepPhaseId": "8e3c81fddb46248e3bfce83b731b2854",
+        "NaturalId": 3,
+        "Start": "2026-01-13T04:46:42.194Z",
+        "End": "2026-01-20T04:46:42.194Z",
+        "ServiceLevel": 1,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 13,
+            "Required": 13
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 5,
+            "Required": 5
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 52,
+            "Required": 52
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 5,
+            "Required": 5
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 13,
+            "Required": 13
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 52,
+            "Required": 52
+          }
+        ]
       },
       {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 5
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 52
-      },
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 13
+        "GatewayUpkeepPhaseId": "2d03d10a288bf23cc8a24c94618d8ee5",
+        "NaturalId": 4,
+        "Start": "2026-01-20T04:46:42.194Z",
+        "End": "2026-01-27T04:46:42.194Z",
+        "ServiceLevel": 1,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 13,
+            "Required": 13
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 5,
+            "Required": 5
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 52,
+            "Required": 52
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 5,
+            "Required": 5
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 13,
+            "Required": 13
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 52,
+            "Required": 52
+          }
+        ]
       }
     ],
-    "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0.9671377054398148,
-    "Timestamp": "2026-01-25T15:27:08.490348Z"
+    "Timestamp": "2026-01-25T18:17:17.667849Z"
   },
   {
     "GatewayId": "32ca545ba0ca86bb97f08173968377f1",
@@ -1552,42 +1912,11 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": null,
     "PhaseAverageJumpsFailedDueNoCapacity": null,
     "PhaseAverageInboundJumps": null,
-    "Upkeeps": [
-      {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 10
-      }
-    ],
+    "Upkeeps": [],
     "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0,
-    "Timestamp": "2026-01-25T15:27:08.490376Z"
+    "Timestamp": "2026-01-25T18:17:17.667939Z"
   },
   {
     "GatewayId": "0d31f1589532e9b3c27a9a24cb8b8f01",
@@ -1622,21 +1951,21 @@
     "UpgraderName": null,
     "UpgraderCode": null,
     "FuelPerJump": 30,
-    "AvailableFuelUnits": 6968,
+    "AvailableFuelUnits": 6818,
     "MaxFuelUnits": 25000,
     "AverageFuelAvailibility": 1,
     "UsageAmount": 1500,
     "UsageCurrency": "NCC",
-    "Jumps": 608,
-    "TotalJumps": 608,
+    "Jumps": 613,
+    "TotalJumps": 613,
     "CurrentPhaseStart": "2026-01-22T17:52:41.075Z",
     "CurrentPhaseEnd": "2026-01-29T17:52:41.075Z",
     "CurrentPhaseNaturalId": 5,
-    "CurrentPhaseJumps": 57,
+    "CurrentPhaseJumps": 62,
     "CurrentPhaseJumpsFailedDueInoperative": 0,
     "CurrentPhaseJumpsFailedDueInsufficientFuel": 0,
     "CurrentPhaseJumpsFailedDueNoCapacity": 0,
-    "CurrentPhaseInboundJumps": 50,
+    "CurrentPhaseInboundJumps": 56,
     "LastPhaseStart": "2026-01-15T17:52:41.075Z",
     "LastPhaseEnd": "2026-01-22T17:52:41.075Z",
     "LastPhaseNaturalId": 4,
@@ -1653,54 +1982,219 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": 0,
     "PhaseAverageJumpsFailedDueNoCapacity": 0,
     "PhaseAverageInboundJumps": 135,
-    "Upkeeps": [
+    "Upkeeps": [],
+    "UpkeepPhases": [
       {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 11
+        "GatewayUpkeepPhaseId": "7323710e1cd7c67305a53695a6716570",
+        "NaturalId": 4,
+        "Start": "2026-01-15T17:52:41.075Z",
+        "End": "2026-01-22T17:52:41.075Z",
+        "ServiceLevel": 1,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 44,
+            "Required": 44
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 44,
+            "Required": 44
+          }
+        ]
       },
       {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 44
+        "GatewayUpkeepPhaseId": "0ed05d4ee20fa7e24057c50080736f14",
+        "NaturalId": 5,
+        "Start": "2026-01-22T17:52:41.075Z",
+        "End": "2026-01-29T17:52:41.075Z",
+        "ServiceLevel": 1,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 44,
+            "Required": 44
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 44,
+            "Required": 44
+          }
+        ]
       },
       {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 11
+        "GatewayUpkeepPhaseId": "e0f3bee21a473359503393248f8d80ec",
+        "NaturalId": 1,
+        "Start": "2025-12-25T17:52:41.075Z",
+        "End": "2026-01-01T17:52:41.075Z",
+        "ServiceLevel": 0.8564147685185185,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 10,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 40,
+            "Required": 40
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 10,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 40,
+            "Required": 40
+          }
+        ]
       },
       {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
+        "GatewayUpkeepPhaseId": "dbf0d5dfd9397605c177667985a3e3f2",
+        "NaturalId": 2,
+        "Start": "2026-01-01T17:52:41.075Z",
+        "End": "2026-01-08T17:52:41.075Z",
+        "ServiceLevel": 1,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 44,
+            "Required": 44
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 44,
+            "Required": 44
+          }
+        ]
       },
       {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 44
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
+        "GatewayUpkeepPhaseId": "d7c787b17220137577bde51c3d10f7b0",
+        "NaturalId": 3,
+        "Start": "2026-01-08T17:52:41.075Z",
+        "End": "2026-01-15T17:52:41.075Z",
+        "ServiceLevel": 0.9181727562830688,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 44,
+            "Required": 44
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 11,
+            "Required": 11
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 44,
+            "Required": 44
+          }
+        ]
       }
     ],
-    "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0.9549175049603175,
-    "Timestamp": "2026-01-25T15:27:08.490339Z"
+    "Timestamp": "2026-01-25T18:17:17.667869Z"
   },
   {
     "GatewayId": "99b2efa4c505e784449d6ee8f3bca70f",
     "Name": "GTW-QET-721",
     "NaturalId": "GTW-QET-721",
     "LocationNaturalId": "IA-158b",
-    "Established": null,
+    "Established": "2026-01-25T17:06:29.856Z",
     "CurrencyCode": "ICA",
-    "OperationalState": "OPERATIONAL",
-    "JumpsPerDay": 0,
-    "MaxShipVolume": 0,
-    "LinkingRadius": 0,
+    "OperationalState": "UPKEEP_MISSING",
+    "JumpsPerDay": 250,
+    "MaxShipVolume": 1500,
+    "LinkingRadius": 10,
     "CapacityUpgrades": 0,
     "VolumeUpgrades": 0,
     "DistanceUpgrades": 0,
@@ -1720,22 +2214,22 @@
     "UpgraderId": null,
     "UpgraderName": null,
     "UpgraderCode": null,
-    "FuelPerJump": null,
-    "AvailableFuelUnits": null,
-    "MaxFuelUnits": null,
-    "AverageFuelAvailibility": null,
-    "UsageAmount": null,
-    "UsageCurrency": null,
+    "FuelPerJump": 30,
+    "AvailableFuelUnits": 0,
+    "MaxFuelUnits": 25000,
+    "AverageFuelAvailibility": 0,
+    "UsageAmount": 1000,
+    "UsageCurrency": "ICA",
     "Jumps": 0,
     "TotalJumps": 0,
-    "CurrentPhaseStart": null,
-    "CurrentPhaseEnd": null,
-    "CurrentPhaseNaturalId": null,
-    "CurrentPhaseJumps": null,
-    "CurrentPhaseJumpsFailedDueInoperative": null,
-    "CurrentPhaseJumpsFailedDueInsufficientFuel": null,
-    "CurrentPhaseJumpsFailedDueNoCapacity": null,
-    "CurrentPhaseInboundJumps": null,
+    "CurrentPhaseStart": "2026-01-25T17:06:29.856Z",
+    "CurrentPhaseEnd": "2026-02-01T17:06:29.856Z",
+    "CurrentPhaseNaturalId": 1,
+    "CurrentPhaseJumps": 0,
+    "CurrentPhaseJumpsFailedDueInoperative": 0,
+    "CurrentPhaseJumpsFailedDueInsufficientFuel": 0,
+    "CurrentPhaseJumpsFailedDueNoCapacity": 0,
+    "CurrentPhaseInboundJumps": 0,
     "LastPhaseStart": null,
     "LastPhaseEnd": null,
     "LastPhaseNaturalId": null,
@@ -1752,42 +2246,51 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": null,
     "PhaseAverageJumpsFailedDueNoCapacity": null,
     "PhaseAverageInboundJumps": null,
-    "Upkeeps": [
+    "Upkeeps": [],
+    "UpkeepPhases": [
       {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
+        "GatewayUpkeepPhaseId": "2c5a096db04be7705ecf0cf8086426d2",
+        "NaturalId": 1,
+        "Start": "2026-01-25T17:06:29.856Z",
+        "End": "2026-02-01T17:06:29.856Z",
+        "ServiceLevel": 0,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 0,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 0,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 0,
+            "Required": 40
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 0,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 0,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 0,
+            "Required": 40
+          }
+        ]
       }
     ],
-    "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0,
-    "Timestamp": "2026-01-25T15:27:08.490349Z"
+    "Timestamp": "2026-01-25T18:17:17.667836Z"
   },
   {
     "GatewayId": "a3426ea17d82981ab83be8c1f434b40b",
@@ -1851,42 +2354,11 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": null,
     "PhaseAverageJumpsFailedDueNoCapacity": null,
     "PhaseAverageInboundJumps": null,
-    "Upkeeps": [
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 40
-      }
-    ],
+    "Upkeeps": [],
     "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0,
-    "Timestamp": "2026-01-25T15:27:08.49032Z"
+    "Timestamp": "2026-01-25T18:17:17.667957Z"
   },
   {
     "GatewayId": "5a9e3fa08176c8f73176360041cbd51a",
@@ -1950,42 +2422,11 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": null,
     "PhaseAverageJumpsFailedDueNoCapacity": null,
     "PhaseAverageInboundJumps": null,
-    "Upkeeps": [
-      {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 40
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 4
-      },
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 10
-      },
-      {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 40
-      }
-    ],
+    "Upkeeps": [],
     "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0,
-    "Timestamp": "2026-01-25T15:27:08.490369Z"
+    "Timestamp": "2026-01-25T18:17:17.66793Z"
   },
   {
     "GatewayId": "a5d2f392c25b7596378ae10924cbe186",
@@ -2020,21 +2461,21 @@
     "UpgraderName": null,
     "UpgraderCode": null,
     "FuelPerJump": 30,
-    "AvailableFuelUnits": 16040,
+    "AvailableFuelUnits": 15980,
     "MaxFuelUnits": 25000,
     "AverageFuelAvailibility": 1,
     "UsageAmount": 1500,
     "UsageCurrency": "NCC",
-    "Jumps": 132,
-    "TotalJumps": 132,
+    "Jumps": 134,
+    "TotalJumps": 134,
     "CurrentPhaseStart": "2026-01-18T20:16:25.165Z",
     "CurrentPhaseEnd": "2026-01-25T20:16:25.165Z",
     "CurrentPhaseNaturalId": 2,
-    "CurrentPhaseJumps": 95,
+    "CurrentPhaseJumps": 97,
     "CurrentPhaseJumpsFailedDueInoperative": 0,
     "CurrentPhaseJumpsFailedDueInsufficientFuel": 0,
     "CurrentPhaseJumpsFailedDueNoCapacity": 0,
-    "CurrentPhaseInboundJumps": 108,
+    "CurrentPhaseInboundJumps": 111,
     "LastPhaseStart": "2026-01-11T20:16:25.165Z",
     "LastPhaseEnd": "2026-01-18T20:16:25.165Z",
     "LastPhaseNaturalId": 1,
@@ -2051,42 +2492,90 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": 0,
     "PhaseAverageJumpsFailedDueNoCapacity": 0,
     "PhaseAverageInboundJumps": 23,
-    "Upkeeps": [
+    "Upkeeps": [],
+    "UpkeepPhases": [
       {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 5
+        "GatewayUpkeepPhaseId": "f93107c243c1362e4d5b87755deed865",
+        "NaturalId": 1,
+        "Start": "2026-01-11T20:16:25.165Z",
+        "End": "2026-01-18T20:16:25.165Z",
+        "ServiceLevel": 0.7097743551587301,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 10,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 40,
+            "Required": 40
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 10,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 40,
+            "Required": 40
+          }
+        ]
       },
       {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 52
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 52
-      },
-      {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 5
-      },
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 13
-      },
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 13
+        "GatewayUpkeepPhaseId": "7d2eb604076608962e532e8196b21dca",
+        "NaturalId": 2,
+        "Start": "2026-01-18T20:16:25.165Z",
+        "End": "2026-01-25T20:16:25.165Z",
+        "ServiceLevel": 1,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 13,
+            "Required": 13
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 5,
+            "Required": 5
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 52,
+            "Required": 52
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 5,
+            "Required": 5
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 13,
+            "Required": 13
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 52,
+            "Required": 52
+          }
+        ]
       }
     ],
-    "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0.854887177579365,
-    "Timestamp": "2026-01-25T15:27:08.490316Z"
+    "Timestamp": "2026-01-25T18:17:17.667833Z"
   },
   {
     "GatewayId": "fce50d91944a366ce03b46eaef056a03",
@@ -2121,21 +2610,21 @@
     "UpgraderName": null,
     "UpgraderCode": null,
     "FuelPerJump": 30,
-    "AvailableFuelUnits": 22330,
+    "AvailableFuelUnits": 22240,
     "MaxFuelUnits": 25000,
     "AverageFuelAvailibility": 1,
     "UsageAmount": 1500,
     "UsageCurrency": "NCC",
-    "Jumps": 131,
-    "TotalJumps": 131,
+    "Jumps": 134,
+    "TotalJumps": 134,
     "CurrentPhaseStart": "2026-01-21T07:45:12.474Z",
     "CurrentPhaseEnd": "2026-01-28T07:45:12.474Z",
     "CurrentPhaseNaturalId": 2,
-    "CurrentPhaseJumps": 65,
+    "CurrentPhaseJumps": 68,
     "CurrentPhaseJumpsFailedDueInoperative": 0,
     "CurrentPhaseJumpsFailedDueInsufficientFuel": 0,
     "CurrentPhaseJumpsFailedDueNoCapacity": 0,
-    "CurrentPhaseInboundJumps": 58,
+    "CurrentPhaseInboundJumps": 60,
     "LastPhaseStart": "2026-01-14T07:45:12.474Z",
     "LastPhaseEnd": "2026-01-21T07:45:12.474Z",
     "LastPhaseNaturalId": 1,
@@ -2152,41 +2641,89 @@
     "PhaseAverageJumpsFailedDueInsufficientFuel": 0,
     "PhaseAverageJumpsFailedDueNoCapacity": 0,
     "PhaseAverageInboundJumps": 74,
-    "Upkeeps": [
+    "Upkeeps": [],
+    "UpkeepPhases": [
       {
-        "MaterialId": "0253e010aee37786b8e0b7220db60527",
-        "MaterialTicker": "WRH",
-        "Amount": 5
+        "GatewayUpkeepPhaseId": "fffc85d1ee382b1ca76dedfd4a4dac4b",
+        "NaturalId": 1,
+        "Start": "2026-01-14T07:45:12.474Z",
+        "End": "2026-01-21T07:45:12.474Z",
+        "ServiceLevel": 0.783068792989418,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 10,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 40,
+            "Required": 40
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 4,
+            "Required": 4
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 10,
+            "Required": 10
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 40,
+            "Required": 40
+          }
+        ]
       },
       {
-        "MaterialId": "0bff5df7021b879dcdb098358d150473",
-        "MaterialTicker": "SPT",
-        "Amount": 52
-      },
-      {
-        "MaterialId": "4602969555899f2a4955e3b08d2fbdb6",
-        "MaterialTicker": "SP",
-        "Amount": 13
-      },
-      {
-        "MaterialId": "edb9e2c57c966f28c66f441bda0b030f",
-        "MaterialTicker": "POW",
-        "Amount": 5
-      },
-      {
-        "MaterialId": "04970fd8cd9c3bc423b46503985e55de",
-        "MaterialTicker": "SEA",
-        "Amount": 52
-      },
-      {
-        "MaterialId": "5ddd503694fc9c42013e2cf2ca3b85af",
-        "MaterialTicker": "ALR",
-        "Amount": 13
+        "GatewayUpkeepPhaseId": "dfac869d37c6b18a683d37e0e327b77c",
+        "NaturalId": 2,
+        "Start": "2026-01-21T07:45:12.474Z",
+        "End": "2026-01-28T07:45:12.474Z",
+        "ServiceLevel": 1,
+        "Upkeeps": [
+          {
+            "MaterialTicker": "ALR",
+            "Current": 13,
+            "Required": 13
+          },
+          {
+            "MaterialTicker": "WRH",
+            "Current": 5,
+            "Required": 5
+          },
+          {
+            "MaterialTicker": "SEA",
+            "Current": 52,
+            "Required": 52
+          },
+          {
+            "MaterialTicker": "POW",
+            "Current": 5,
+            "Required": 5
+          },
+          {
+            "MaterialTicker": "SP",
+            "Current": 13,
+            "Required": 13
+          },
+          {
+            "MaterialTicker": "SPT",
+            "Current": 52,
+            "Required": 52
+          }
+        ]
       }
     ],
-    "UpkeepPhases": [],
     "UpkeepContractors": [],
     "AverageUpkeepUptime": 0.891534396494709,
-    "Timestamp": "2026-01-25T15:27:08.490327Z"
+    "Timestamp": "2026-01-25T18:17:17.667938Z"
   }
 ]

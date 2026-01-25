@@ -8,6 +8,7 @@ export const DataPointProvider = ({ children }) => {
   const [meteorDensityData, setMeteorDensityData] = useState({});
   const [luminosityData, setLuminosityData] = useState({});
   const [systemNames, setSystemNames] = useState({});
+  const [systemIdByNaturalId, setSystemIdByNaturalId] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -19,6 +20,12 @@ export const DataPointProvider = ({ children }) => {
 
   // Scale setting (absolute vs relative)
   const [useRelativeScale, setUseRelativeScale] = useState(false);
+
+  // Gateway layer state
+  const [isGatewayLayerVisible, setIsGatewayLayerVisible] = useState(true);
+  const [gatewayData, setGatewayData] = useState([]);
+  const [gatewayLoading, setGatewayLoading] = useState(false);
+  const [gatewayError, setGatewayError] = useState(null);
 
   // Fetch system stars data
   // In src/contexts/DataPointContext.js
@@ -43,6 +50,7 @@ export const DataPointProvider = ({ children }) => {
         const densityMap = {};
         const luminosityMap = {};
         const finalSystemNameMap = {};
+        const naturalIdToSystemId = {};
 
         staticData.forEach(system => {
           densityMap[system.SystemId] = system.MeteoroidDensity;
@@ -51,11 +59,19 @@ export const DataPointProvider = ({ children }) => {
           const freshName = freshSystemNamesMap.get(system.SystemId);
 
           finalSystemNameMap[system.SystemId] = freshName || system.Name;
+          
+          // Map NaturalId to SystemId for gateway lookups
+          if (system.NaturalId) {
+            naturalIdToSystemId[system.NaturalId] = system.SystemId;
+            // Also map lowercase version
+            naturalIdToSystemId[system.NaturalId.toLowerCase()] = system.SystemId;
+          }
         });
 
         setMeteorDensityData(densityMap);
         setLuminosityData(luminosityMap);
         setSystemNames(finalSystemNameMap);
+        setSystemIdByNaturalId(naturalIdToSystemId);
         setError(null);
 
       } catch (err) {
@@ -68,6 +84,40 @@ export const DataPointProvider = ({ children }) => {
 
     fetchOverlayData();
   }, []);
+
+  // Fetch gateway data when toggled on or on initial load if visible by default
+  const fetchGatewayData = useCallback(async () => {
+    if (gatewayData.length > 0) {
+      // Already have data, just toggle visibility
+      return;
+    }
+    
+    try {
+      setGatewayLoading(true);
+      setGatewayError(null);
+      
+      const response = await fetch('https://api.fnar.net/gateway?include_upkeeps=false&include_phases=true&include_contractors=false');
+      
+      if (!response.ok) {
+        throw new Error(`Gateway API request failed with status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setGatewayData(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error fetching gateway data:', err);
+      setGatewayError(err.message);
+    } finally {
+      setGatewayLoading(false);
+    }
+  }, [gatewayData.length]);
+
+  // Fetch gateway data on mount since layer is visible by default
+  useEffect(() => {
+    if (isGatewayLayerVisible && gatewayData.length === 0) {
+      fetchGatewayData();
+    }
+  }, [isGatewayLayerVisible, gatewayData.length, fetchGatewayData]);
 
   // Get meteorite density for a specific system
   const getSystemMeteorDensity = useCallback((systemId) => {
@@ -92,6 +142,17 @@ export const DataPointProvider = ({ children }) => {
     setShowShipLabels(prev => !prev);
   }, []);
 
+  // Toggle gateway layer visibility
+  const toggleGatewayLayer = useCallback(() => {
+    setIsGatewayLayerVisible(prev => {
+      const newValue = !prev;
+      if (newValue) {
+        fetchGatewayData();
+      }
+      return newValue;
+    });
+  }, [fetchGatewayData]);
+
   // Get maximum density and luminosity value for relative scaling
   const maxValues = useMemo(() => ({
     density: Math.max(0, ...Object.values(meteorDensityData)),
@@ -109,6 +170,7 @@ export const DataPointProvider = ({ children }) => {
     meteorDensityData,
     luminosityData,
     systemNames,
+    systemIdByNaturalId,
     isOverlayVisible,
     useRelativeScale,
     showShipLabels,
@@ -120,7 +182,13 @@ export const DataPointProvider = ({ children }) => {
     toggleScaleType,
     toggleShipLabels,
     getNormalizedValue,
-    maxValues
+    maxValues,
+    // Gateway related
+    isGatewayLayerVisible,
+    gatewayData,
+    gatewayLoading,
+    gatewayError,
+    toggleGatewayLayer
   };
 
   return (
