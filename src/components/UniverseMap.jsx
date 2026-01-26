@@ -4,6 +4,7 @@ import * as d3 from 'd3';
 import { GraphContext } from '../contexts/GraphContext';
 import { SelectionContext } from '../contexts/SelectionContext';
 import { useCogcOverlay } from '../contexts/CogcOverlayContext';
+import { useDataPoints } from '../contexts/DataPointContext';
 import { addMouseEvents } from '../utils/svgUtils';
 import { cogcPrograms } from '../constants/cogcPrograms';
 import './UniverseMap.css';
@@ -13,7 +14,16 @@ const UniverseMap = React.memo(() => {
   const { graph, planetData, materials } = useContext(GraphContext);
   const { highlightSelectedSystem } = useContext(SelectionContext);
   const { overlayProgram } = useCogcOverlay();
-  const { searchResults, isRelativeThreshold } = useContext(SearchContext);
+  const { 
+    searchResults, 
+    isRelativeThreshold 
+  } = useContext(SearchContext);
+  const {
+    tripSelectingStart,
+    tripSelectingEnd,
+    selectTripSystem,
+    systemNames
+  } = useDataPoints();
   const svgRef = useRef(null);
   const graphRef = useRef(null);
   // Handle system click
@@ -21,8 +31,16 @@ const UniverseMap = React.memo(() => {
     if (systemId === 'rect1') {
       return;
     }
+    
+    // Check if we're selecting for trip calculator
+    if (tripSelectingStart || tripSelectingEnd) {
+      const systemName = systemNames[systemId] || systemId.substring(0, 8);
+      selectTripSystem(systemId, systemName);
+      return;
+    }
+    
     highlightSelectedSystem(systemId);
-  }, [highlightSelectedSystem]);
+  }, [highlightSelectedSystem, tripSelectingStart, tripSelectingEnd, selectTripSystem, systemNames]);
 
   // Attach click events
   const attachClickEvents = useCallback((g) => {

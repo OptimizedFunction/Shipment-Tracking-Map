@@ -9,6 +9,7 @@ export const DataPointProvider = ({ children }) => {
   const [luminosityData, setLuminosityData] = useState({});
   const [systemNames, setSystemNames] = useState({});
   const [systemIdByNaturalId, setSystemIdByNaturalId] = useState({});
+  const [systemPositions3D, setSystemPositions3D] = useState({}); // 3D positions for distance calculation
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -26,6 +27,15 @@ export const DataPointProvider = ({ children }) => {
   const [gatewayData, setGatewayData] = useState([]);
   const [gatewayLoading, setGatewayLoading] = useState(false);
   const [gatewayError, setGatewayError] = useState(null);
+
+  // Gateway Trip Calculator state
+  const [tripCalculatorOpen, setTripCalculatorOpen] = useState(false);
+  const [tripStartSystem, setTripStartSystem] = useState(null);
+  const [tripEndSystem, setTripEndSystem] = useState(null);
+  const [tripSelectingStart, setTripSelectingStart] = useState(false);
+  const [tripSelectingEnd, setTripSelectingEnd] = useState(false);
+  const [tripShipVolume, setTripShipVolume] = useState(500);
+  const [tripRoute, setTripRoute] = useState(null); // Calculated route for visualization
 
   // Fetch system stars data
   // In src/contexts/DataPointContext.js
@@ -51,6 +61,7 @@ export const DataPointProvider = ({ children }) => {
         const luminosityMap = {};
         const finalSystemNameMap = {};
         const naturalIdToSystemId = {};
+        const positions3D = {};
 
         staticData.forEach(system => {
           densityMap[system.SystemId] = system.MeteoroidDensity;
@@ -66,12 +77,22 @@ export const DataPointProvider = ({ children }) => {
             // Also map lowercase version
             naturalIdToSystemId[system.NaturalId.toLowerCase()] = system.SystemId;
           }
+          
+          // Store 3D position for distance calculations
+          if (system.PositionX !== undefined && system.PositionY !== undefined && system.PositionZ !== undefined) {
+            positions3D[system.SystemId] = {
+              x: system.PositionX,
+              y: system.PositionY,
+              z: system.PositionZ
+            };
+          }
         });
 
         setMeteorDensityData(densityMap);
         setLuminosityData(luminosityMap);
         setSystemNames(finalSystemNameMap);
         setSystemIdByNaturalId(naturalIdToSystemId);
+        setSystemPositions3D(positions3D);
         setError(null);
 
       } catch (err) {
@@ -153,6 +174,38 @@ export const DataPointProvider = ({ children }) => {
     });
   }, [fetchGatewayData]);
 
+  // Trip Calculator functions
+  const toggleTripCalculator = useCallback(() => {
+    setTripCalculatorOpen(prev => !prev);
+  }, []);
+
+  const startSelectingTripStart = useCallback(() => {
+    setTripSelectingStart(true);
+    setTripSelectingEnd(false);
+  }, []);
+
+  const startSelectingTripEnd = useCallback(() => {
+    setTripSelectingStart(false);
+    setTripSelectingEnd(true);
+  }, []);
+
+  const selectTripSystem = useCallback((systemId, systemName) => {
+    if (tripSelectingStart) {
+      setTripStartSystem({ id: systemId, name: systemName });
+      setTripSelectingStart(false);
+    } else if (tripSelectingEnd) {
+      setTripEndSystem({ id: systemId, name: systemName });
+      setTripSelectingEnd(false);
+    }
+  }, [tripSelectingStart, tripSelectingEnd]);
+
+  const clearTripSelection = useCallback(() => {
+    setTripStartSystem(null);
+    setTripEndSystem(null);
+    setTripSelectingStart(false);
+    setTripSelectingEnd(false);
+  }, []);
+
   // Get maximum density and luminosity value for relative scaling
   const maxValues = useMemo(() => ({
     density: Math.max(0, ...Object.values(meteorDensityData)),
@@ -171,6 +224,7 @@ export const DataPointProvider = ({ children }) => {
     luminosityData,
     systemNames,
     systemIdByNaturalId,
+    systemPositions3D,
     isOverlayVisible,
     useRelativeScale,
     showShipLabels,
@@ -188,7 +242,23 @@ export const DataPointProvider = ({ children }) => {
     gatewayData,
     gatewayLoading,
     gatewayError,
-    toggleGatewayLayer
+    toggleGatewayLayer,
+    // Trip Calculator related
+    tripCalculatorOpen,
+    setTripCalculatorOpen,
+    tripStartSystem,
+    tripEndSystem,
+    tripSelectingStart,
+    tripSelectingEnd,
+    tripShipVolume,
+    setTripShipVolume,
+    tripRoute,
+    setTripRoute,
+    toggleTripCalculator,
+    startSelectingTripStart,
+    startSelectingTripEnd,
+    selectTripSystem,
+    clearTripSelection
   };
 
   return (

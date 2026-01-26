@@ -11,6 +11,7 @@ import { useDataPoints } from '../contexts/DataPointContext';
 import { GraphContext } from '../contexts/GraphContext';
 import { AuthContext, AUTH_STRATEGIES } from '../contexts/AuthContext';
 import { SIL_TRACKER_API_KEY, SIL_TRACKER_USERNAME } from '../constants/silTracking';
+import GatewayTripCalculator from './GatewayTripCalculator';
 
 const STORAGE_PERCENT_FIELDS = [
   'PercentFull',
@@ -285,7 +286,12 @@ const DataPointOverlay = ({ mapRef }) => {
     showShipLabels,
     toggleShipLabels,
     isGatewayLayerVisible,
-    gatewayData
+    gatewayData,
+    tripRoute,
+    tripStartSystem,
+    tripEndSystem,
+    tripCalculatorOpen,
+    setTripCalculatorOpen
   } = useDataPoints();
   const {
     graph,
@@ -326,6 +332,7 @@ const DataPointOverlay = ({ mapRef }) => {
   const [silToggleLoading, setSilToggleLoading] = useState(false);
   const [silToggleError, setSilToggleError] = useState(null);
   const [isShipFilterCollapsed, setIsShipFilterCollapsed] = useState(false);
+  const [isTripCalculatorCollapsed, setIsTripCalculatorCollapsed] = useState(true);
   const [showSilTooltip, setShowSilTooltip] = useState(false);
   const [groupId, setGroupId] = useState('');
   const [groupLoading, setGroupLoading] = useState(false);
@@ -2365,6 +2372,156 @@ const DataPointOverlay = ({ mapRef }) => {
           .attr('stroke-dasharray', `${3 / zoomLevel} ${2 / zoomLevel}`)
           .attr('opacity', 0.8);
       });
+    }
+
+    // Trip Route Visualization
+    if (tripCalculatorOpen && tripRoute && tripRoute.path && tripRoute.path.length > 0 && graph?.systems) {
+      const tripLayer = getLayer('trip-route-layer');
+      tripLayer.selectAll('*').remove();
+      tripLayer.raise(); // Put trip route on top
+
+      const tripStrokeWidth = Math.max(6 / zoomLevel, 3);
+      const glowStrokeWidth = Math.max(12 / zoomLevel, 6);
+
+      // All segments are gateway jumps now
+      const segmentColor = '#00ff88';
+      const glowColor = 'rgba(0, 255, 136, 0.3)';
+
+      // Draw route segments
+      tripRoute.path.forEach((segment, index) => {
+        const fromSystem = graph.systems[segment.fromSystem];
+        const toSystem = graph.systems[segment.toSystem];
+        
+        if (!fromSystem || !toSystem) return;
+
+        // Glow effect
+        tripLayer.append('line')
+          .attr('x1', fromSystem.x)
+          .attr('y1', fromSystem.y)
+          .attr('x2', toSystem.x)
+          .attr('y2', toSystem.y)
+          .attr('stroke', glowColor)
+          .attr('stroke-width', glowStrokeWidth)
+          .attr('stroke-linecap', 'round');
+
+        // Main line
+        tripLayer.append('line')
+          .attr('x1', fromSystem.x)
+          .attr('y1', fromSystem.y)
+          .attr('x2', toSystem.x)
+          .attr('y2', toSystem.y)
+          .attr('stroke', segmentColor)
+          .attr('stroke-width', tripStrokeWidth)
+          .attr('stroke-linecap', 'round');
+
+        // Arrow at midpoint
+        const midX = (fromSystem.x + toSystem.x) / 2;
+        const midY = (fromSystem.y + toSystem.y) / 2;
+        const angle = Math.atan2(toSystem.y - fromSystem.y, toSystem.x - fromSystem.x);
+        const arrowSize = Math.max(10 / zoomLevel, 5);
+
+        const arrowPoints = [
+          { x: midX + arrowSize * Math.cos(angle), y: midY + arrowSize * Math.sin(angle) },
+          { x: midX + arrowSize * Math.cos(angle + 2.5), y: midY + arrowSize * Math.sin(angle + 2.5) },
+          { x: midX + arrowSize * Math.cos(angle - 2.5), y: midY + arrowSize * Math.sin(angle - 2.5) }
+        ];
+
+        tripLayer.append('polygon')
+          .attr('points', arrowPoints.map(p => `${p.x},${p.y}`).join(' '))
+          .attr('fill', segmentColor);
+
+        // Step number at midpoint
+        const labelOffset = Math.max(15 / zoomLevel, 8);
+        tripLayer.append('circle')
+          .attr('cx', midX - labelOffset * Math.sin(angle))
+          .attr('cy', midY + labelOffset * Math.cos(angle))
+          .attr('r', Math.max(12 / zoomLevel, 6))
+          .attr('fill', '#0f172a')
+          .attr('stroke', segmentColor)
+          .attr('stroke-width', Math.max(2 / zoomLevel, 1));
+
+        tripLayer.append('text')
+          .attr('x', midX - labelOffset * Math.sin(angle))
+          .attr('y', midY + labelOffset * Math.cos(angle))
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'central')
+          .attr('fill', segmentColor)
+          .attr('font-size', Math.max(10 / zoomLevel, 5))
+          .attr('font-weight', 'bold')
+          .text(index + 1);
+      });
+
+      // Draw start marker
+      if (tripStartSystem && graph.systems[tripStartSystem.id]) {
+        const startSystem = graph.systems[tripStartSystem.id];
+        const markerSize = Math.max(16 / zoomLevel, 8);
+
+        // Outer glow
+        tripLayer.append('circle')
+          .attr('cx', startSystem.x)
+          .attr('cy', startSystem.y)
+          .attr('r', markerSize * 1.5)
+          .attr('fill', 'rgba(34, 197, 94, 0.3)')
+          .attr('stroke', 'none');
+
+        // Marker circle
+        tripLayer.append('circle')
+          .attr('cx', startSystem.x)
+          .attr('cy', startSystem.y)
+          .attr('r', markerSize)
+          .attr('fill', '#22c55e')
+          .attr('stroke', '#ffffff')
+          .attr('stroke-width', Math.max(2 / zoomLevel, 1));
+
+        // Start label
+        tripLayer.append('text')
+          .attr('x', startSystem.x)
+          .attr('y', startSystem.y)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'central')
+          .attr('fill', '#ffffff')
+          .attr('font-size', Math.max(10 / zoomLevel, 5))
+          .attr('font-weight', 'bold')
+          .text('S');
+      }
+
+      // Draw end marker
+      if (tripEndSystem && graph.systems[tripEndSystem.id]) {
+        const endSystem = graph.systems[tripEndSystem.id];
+        const markerSize = Math.max(16 / zoomLevel, 8);
+
+        // Outer glow
+        tripLayer.append('circle')
+          .attr('cx', endSystem.x)
+          .attr('cy', endSystem.y)
+          .attr('r', markerSize * 1.5)
+          .attr('fill', 'rgba(239, 68, 68, 0.3)')
+          .attr('stroke', 'none');
+
+        // Marker circle
+        tripLayer.append('circle')
+          .attr('cx', endSystem.x)
+          .attr('cy', endSystem.y)
+          .attr('r', markerSize)
+          .attr('fill', '#ef4444')
+          .attr('stroke', '#ffffff')
+          .attr('stroke-width', Math.max(2 / zoomLevel, 1));
+
+        // End label
+        tripLayer.append('text')
+          .attr('x', endSystem.x)
+          .attr('y', endSystem.y)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'central')
+          .attr('fill', '#ffffff')
+          .attr('font-size', Math.max(10 / zoomLevel, 5))
+          .attr('font-weight', 'bold')
+          .text('E');
+      }
+    } else {
+      // Clear trip route layer if not active
+      const tripLayer = getLayer('trip-route-layer');
+      tripLayer.selectAll('*').remove();
     }
 
     const shipsById = new Map();
@@ -5783,7 +5940,7 @@ const DataPointOverlay = ({ mapRef }) => {
       addBarHoverEffects(densityBar, 'Density', density, densityColorScale);
       addBarHoverEffects(luminosityBar, 'Luminosity', luminosity, luminosityColorScale);
     });
-  }, [mapRef, isOverlayVisible, isLoading, error, meteorDensityData, luminosityData, systemNames, maxValues, combinedShips, combinedFlights, graph, selectedShipId, planetLookups, systemLookups, showShipLabels, getShipLoadInfoById, getLoadColorForRatio, buildLoadSummary, buildShipmentTiles, buildLoadBarDescriptors, formatCapacityValue, partnerFilterActive, partnerFilteredShipments, filterShipmentsByPartner, systemShipmentCounts, isGatewayLayerVisible, gatewayData, systemIdByNaturalId]);
+  }, [mapRef, isOverlayVisible, isLoading, error, meteorDensityData, luminosityData, systemNames, maxValues, combinedShips, combinedFlights, graph, selectedShipId, planetLookups, systemLookups, showShipLabels, getShipLoadInfoById, getLoadColorForRatio, buildLoadSummary, buildShipmentTiles, buildLoadBarDescriptors, formatCapacityValue, partnerFilterActive, partnerFilteredShipments, filterShipmentsByPartner, systemShipmentCounts, isGatewayLayerVisible, gatewayData, systemIdByNaturalId, tripCalculatorOpen, tripRoute, tripStartSystem, tripEndSystem]);
 
   useEffect(() => {
     renderOverlay();
@@ -5836,7 +5993,12 @@ const DataPointOverlay = ({ mapRef }) => {
             cursor: 'pointer',
             userSelect: 'none'
           }}
-          onClick={() => setIsShipFilterCollapsed(!isShipFilterCollapsed)}
+          onClick={() => {
+            const newState = !isShipFilterCollapsed;
+            setIsShipFilterCollapsed(newState);
+            // Close trip calculator when opening ship tracking
+            if (!newState) setIsTripCalculatorCollapsed(true);
+          }}
         >
           <span style={{ fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '11px' }}>Ship Tracking</span>
           <span style={{ fontSize: '14px', opacity: 0.7 }}>{isShipFilterCollapsed ? '▶' : '▼'}</span>
@@ -6187,6 +6349,38 @@ const DataPointOverlay = ({ mapRef }) => {
             )}
           </>
         )}
+
+        {/* Trip Calculator Section */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: '8px', marginTop: '4px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              userSelect: 'none'
+            }}
+            onClick={() => {
+              const newState = !isTripCalculatorCollapsed;
+              setIsTripCalculatorCollapsed(newState);
+              // Sync with context for route visualization
+              setTripCalculatorOpen(!newState);
+              // Close ship tracking when opening trip calculator
+              if (!newState) setIsShipFilterCollapsed(true);
+            }}
+          >
+            <span style={{ fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '11px' }}>
+              🚀 Gateway Trip Calculator
+            </span>
+            <span style={{ fontSize: '14px', opacity: 0.7 }}>{isTripCalculatorCollapsed ? '▶' : '▼'}</span>
+          </div>
+
+          {!isTripCalculatorCollapsed && (
+            <div style={{ marginTop: '8px' }}>
+              <GatewayTripCalculator embedded={true} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,0 +1,426 @@
+.gateway-trip-calculator {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 16px;
+  width: 320px;
+  max-height: 80vh;
+  overflow-y: auto;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Embedded mode - scrollable with max height */
+.gateway-trip-calculator.gtc-embedded {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  width: 100%;
+  max-height: calc(100vh - 350px);
+  overflow-y: auto;
+}
+
+/* Scrollbar styling for embedded mode */
+.gateway-trip-calculator.gtc-embedded::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gateway-trip-calculator.gtc-embedded::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 3px;
+}
+
+.gateway-trip-calculator.gtc-embedded::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 3px;
+}
+
+.gateway-trip-calculator.gtc-embedded::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+.gtc-embedded .gtc-content {
+  gap: 10px;
+}
+
+.gtc-embedded .gtc-results {
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+.gtc-embedded .gtc-summary {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Remove inner route list max-height in embedded mode since container scrolls */
+.gtc-embedded .gtc-route-list {
+  max-height: none;
+  overflow-y: visible;
+}
+
+.gtc-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #334155;
+}
+
+.gtc-icon {
+  font-size: 20px;
+}
+
+.gtc-title {
+  color: #f7a600;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+.gtc-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gtc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gtc-field label {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.gtc-field input {
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.gtc-field input:focus {
+  border-color: #f7a600;
+}
+
+.gtc-system-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+
+.gtc-system-name {
+  flex: 1;
+  color: #ffffff;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gtc-select-btn {
+  background: #334155;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px;
+  color: #94a3b8;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.gtc-select-btn:hover {
+  background: #475569;
+  color: #ffffff;
+}
+
+.gtc-select-btn.active {
+  background: #f7a600;
+  color: #000000;
+}
+
+.gtc-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.gtc-calculate-btn {
+  flex: 1;
+  background: linear-gradient(135deg, #f7a600, #d97706);
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  color: #000000;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.gtc-calculate-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(247, 166, 0, 0.3);
+}
+
+.gtc-calculate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gtc-clear-btn {
+  background: #334155;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  color: #94a3b8;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.gtc-clear-btn:hover {
+  background: #475569;
+  color: #ffffff;
+}
+
+.gtc-results {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #334155;
+}
+
+.gtc-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.gtc-summary-item {
+  background: #1e293b;
+  border-radius: 6px;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.gtc-summary-label {
+  display: block;
+  color: #64748b;
+  font-size: 9px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.gtc-summary-value {
+  display: block;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.gtc-summary-value.gtc-fees {
+  color: #fb923c;
+}
+
+.gtc-summary-value.gtc-time {
+  color: #60a5fa;
+}
+
+.gtc-route {
+  background: #1e293b;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.gtc-route-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Scrollbar styling for route list */
+.gtc-route-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gtc-route-list::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.gtc-route-list::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 3px;
+}
+
+.gtc-route-list::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+.gtc-route-header {
+  background: #334155;
+  color: #f7a600;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 8px 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.gtc-route-step {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #334155;
+}
+
+.gtc-route-step:last-child {
+  border-bottom: none;
+}
+
+.gtc-step-icon {
+  font-size: 16px;
+  width: 24px;
+  text-align: center;
+}
+
+.gtc-step-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.gtc-step-title {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.gtc-step-gateway .gtc-step-title {
+  color: #a78bfa;
+}
+
+.gtc-step-info {
+  color: #94a3b8;
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.gtc-step-gateway {
+  color: #60a5fa;
+  font-size: 10px;
+  font-style: italic;
+  margin-bottom: 4px;
+}
+
+.gtc-step-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 10px;
+}
+
+.gtc-step-fee {
+  color: #fb923c;
+}
+
+.gtc-step-time {
+  color: #60a5fa;
+}
+
+.gtc-step-distance {
+  color: #94a3b8;
+}
+
+.gtc-step-number {
+  width: 24px;
+  height: 24px;
+  background: #f7a600;
+  color: #0f172a;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gtc-no-route {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #ef4444;
+  font-size: 12px;
+  padding: 20px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+}
+
+.gtc-no-route-icon {
+  font-size: 24px;
+}
+
+.gtc-no-route-text {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+.gtc-no-route small {
+  color: #94a3b8;
+  text-align: center;
+}
+
+/* Scrollbar styling */
+.gateway-trip-calculator::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gateway-trip-calculator::-webkit-scrollbar-track {
+  background: #1e293b;
+  border-radius: 3px;
+}
+
+.gateway-trip-calculator::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 3px;
+}
+
+.gateway-trip-calculator::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+.gtc-hint {
+  background: rgba(247, 166, 0, 0.1);
+  border: 1px solid rgba(247, 166, 0, 0.3);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: #f7a600;
+  font-size: 12px;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.gtc-loading {
+  text-align: center;
+  color: #60a5fa;
+  font-size: 12px;
+  padding: 20px;
+  background: #1e293b;
+  border-radius: 6px;
+}
