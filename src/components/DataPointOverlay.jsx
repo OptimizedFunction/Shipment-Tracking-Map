@@ -2257,6 +2257,12 @@ const DataPointOverlay = ({ mapRef }) => {
           .attr('paint-order', 'stroke')
           .text(targetRemainingJumps > 999 ? '999+' : targetRemainingJumps);
 
+        // Look up planet names for gateway locations
+        const sourcePlanet = planetsByNaturalId.get(gateway.LocationNaturalId?.toUpperCase());
+        const targetPlanet = planetsByNaturalId.get(targetGateway.LocationNaturalId?.toUpperCase());
+        const sourcePlanetName = sourcePlanet?.PlanetName || sourcePlanet?.Name || gateway.LocationNaturalId;
+        const targetPlanetName = targetPlanet?.PlanetName || targetPlanet?.Name || targetGateway.LocationNaturalId;
+
         // Add hover tooltip to all link paths and bubbles
         const allHoverables = [...linkPaths];
         // Add bubble groups to hoverables
@@ -2286,13 +2292,13 @@ const DataPointOverlay = ({ mapRef }) => {
               // Directional capacity summary
               `<div style="display: flex; gap: 10px; margin-bottom: 13px;">`,
               `<div style="flex: 1; background: ${sourceBubbleColor}22; border: 1px solid ${sourceBubbleColor}; border-radius: 6px; padding: 8px 11px; text-align: center;">`,
-              `<div style="color: #f7a600; font-size: 10px; margin-bottom: 3px;">« TO ${gateway.LocationPlanetName || gateway.LocationNaturalId}</div>`,
+              `<div style="color: #f7a600; font-size: 10px; margin-bottom: 3px;">« TO ${sourcePlanetName}</div>`,
               `<div style="color: ${sourceBubbleColor}; font-size: 20px; font-weight: 700;">${sourceRemainingJumps}</div>`,
               `<div style="color: #94a3b8; font-size: 9px;">${sourceCurrentJumps} / ${sourceMaxJumps} used</div>`,
               `<div style="color: ${sourceFuelColor}; font-size: 9px; margin-top: 3px;">⛽ ${Math.round(sourceFuelRatio * 100)}%</div>`,
               '</div>',
               `<div style="flex: 1; background: ${targetBubbleColor}22; border: 1px solid ${targetBubbleColor}; border-radius: 6px; padding: 8px 11px; text-align: center;">`,
-              `<div style="color: #f7a600; font-size: 10px; margin-bottom: 3px;">TO ${targetGateway.LocationPlanetName || targetGateway.LocationNaturalId} »</div>`,
+              `<div style="color: #f7a600; font-size: 10px; margin-bottom: 3px;">TO ${targetPlanetName} »</div>`,
               `<div style="color: ${targetBubbleColor}; font-size: 20px; font-weight: 700;">${targetRemainingJumps}</div>`,
               `<div style="color: #94a3b8; font-size: 9px;">${targetCurrentJumps} / ${targetMaxJumps} used</div>`,
               `<div style="color: ${targetFuelColor}; font-size: 9px; margin-top: 3px;">⛽ ${Math.round(targetFuelRatio * 100)}%</div>`,
@@ -2302,24 +2308,24 @@ const DataPointOverlay = ({ mapRef }) => {
               // Source gateway
               '<div style="border-right: 1px solid #334155; padding-right: 19px;">',
               `<div style="color: #ffffff; font-weight: 600; font-size: 14px; margin-bottom: 8px;">${gateway.Name || gateway.NaturalId}</div>`,
-              `<div style="color: #94a3b8; font-size: 12px;">📍 ${gateway.LocationPlanetName || gateway.LocationNaturalId}</div>`,
+              `<div style="color: #94a3b8; font-size: 12px;">📍 ${sourcePlanetName}</div>`,
               `<div style="color: ${sourceOperational ? '#4ade80' : '#f87171'}; font-size: 12px; margin-top: 5px;">${sourceOperational ? '● Operational' : '○ ' + gateway.OperationalState}</div>`,
               `<div style="color: #bfdbfe; font-size: 12px; margin-top: 8px;">Volume: ${gateway.MaxShipVolume?.toLocaleString()} m³</div>`,
               `<div style="color: #c4b5fd; font-size: 12px;">Upgrades: ${gateway.VolumeUpgrades || 0}</div>`,
               `<div style="color: #fb923c; font-size: 12px; margin-top: 5px;">💰 ${gateway.UsageAmount?.toLocaleString() || 0} ${gateway.UsageCurrency || 'AIC'}/jump</div>`,
               `<div style="color: ${sourceFuelColor}; font-size: 12px;">⛽ ${gateway.AvailableFuelUnits?.toLocaleString() || 0} / ${gateway.MaxFuelUnits?.toLocaleString() || 0}</div>`,
-              `<div style="color: #22c55e; font-size: 12px;">🚀 ${sourceJumpsFromFuel} from fuel</div>`,
+              `<div style="color: #22c55e; font-size: 12px;">Fuel for ${sourceJumpsFromFuel} jumps</div>`,
               '</div>',
               // Target gateway
               '<div>',
               `<div style="color: #ffffff; font-weight: 600; font-size: 14px; margin-bottom: 8px;">${targetGateway.Name || targetGateway.NaturalId}</div>`,
-              `<div style="color: #94a3b8; font-size: 12px;">📍 ${targetGateway.LocationPlanetName || targetGateway.LocationNaturalId}</div>`,
+              `<div style="color: #94a3b8; font-size: 12px;">📍 ${targetPlanetName}</div>`,
               `<div style="color: ${targetOperational ? '#4ade80' : '#f87171'}; font-size: 12px; margin-top: 5px;">${targetOperational ? '● Operational' : '○ ' + targetGateway.OperationalState}</div>`,
               `<div style="color: #bfdbfe; font-size: 12px; margin-top: 8px;">Volume: ${targetGateway.MaxShipVolume?.toLocaleString()} m³</div>`,
               `<div style="color: #c4b5fd; font-size: 12px;">Upgrades: ${targetGateway.VolumeUpgrades || 0}</div>`,
               `<div style="color: #fb923c; font-size: 12px; margin-top: 5px;">💰 ${targetGateway.UsageAmount?.toLocaleString() || 0} ${targetGateway.UsageCurrency || 'AIC'}/jump</div>`,
               `<div style="color: ${targetFuelColor}; font-size: 12px;">⛽ ${targetGateway.AvailableFuelUnits?.toLocaleString() || 0} / ${targetGateway.MaxFuelUnits?.toLocaleString() || 0}</div>`,
-              `<div style="color: #22c55e; font-size: 12px;">🚀 ${targetJumpsFromFuel} from fuel</div>`,
+              `<div style="color: #22c55e; font-size: 12px;">Fuel for ${targetJumpsFromFuel} jumps</div>`,
               '</div>',
               '</div>',
               hasVolumeDifference && isBidirectional
