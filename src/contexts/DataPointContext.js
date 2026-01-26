@@ -17,7 +17,7 @@ export const DataPointProvider = ({ children }) => {
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
 
   // Toggle for ship name labels
-  const [showShipLabels, setShowShipLabels] = useState(true);
+  const [showShipLabels, setShowShipLabels] = useState(false);
 
   // Scale setting (absolute vs relative)
   const [useRelativeScale, setUseRelativeScale] = useState(false);
