@@ -124,6 +124,7 @@ export const DataPointProvider = ({ children }) => {
       }
       
       const data = await response.json();
+      
       setGatewayData(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching gateway data:', err);

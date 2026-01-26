@@ -1871,8 +1871,11 @@ const DataPointOverlay = ({ mapRef }) => {
     // Gateway visualization
     if (isGatewayLayerVisible && gatewayData && gatewayData.length > 0 && graph?.systems) {
       
-      // Color mapping based on volume upgrades
-      const getGatewayColor = (volumeUpgrades) => {
+      // Color mapping based on volume upgrades and operational state
+      const getGatewayColor = (volumeUpgrades, isOperational = true) => {
+        // Non-operational gateways are grey
+        if (!isOperational) return '#808080ff';
+        
         switch (volumeUpgrades) {
           case 0: return '#f91616ff'; // weight3000_volume1000 color
           case 1: return '#ea8c08ff'; // capacity2000 color
@@ -2001,34 +2004,45 @@ const DataPointOverlay = ({ mapRef }) => {
           return path;
         };
 
-        // Draw lines based on volume upgrade difference
+        // Draw lines based on volume upgrade difference or operational state difference
         let linkPaths = [];
         
-        if (hasVolumeDifference && isBidirectional) {
-          // Two parallel lines with different colors showing capacity in each direction
-          // Line 1: Source → Target direction (uses source's volume upgrades)
-          const sourceColor = getGatewayColor(sourceVolumeUpgrades);
+        // Check if we need two lines (different volume OR different operational state)
+        const hasOperationalDifference = sourceOperational !== targetOperational;
+        const needsTwoLines = (hasVolumeDifference || hasOperationalDifference);
+        
+        if (needsTwoLines) {
+          // Two parallel lines with different colors showing capacity/status in each direction
+          // Line 1: Source → Target direction (uses source's volume upgrades and operational state)
+          const sourceColor = getGatewayColor(sourceVolumeUpgrades, sourceOperational);
           const line1StartX = startX + perpX * offset;
           const line1StartY = startY + perpY * offset;
           const line1EndX = endX + perpX * offset;
           const line1EndY = endY + perpY * offset;
-          linkPaths.push(drawGatewayLine(line1StartX, line1StartY, line1EndX, line1EndY, sourceColor, true, 'forward', gateway, targetGateway));
+          // Recalculate offset if it was 0 (same volume but different operational)
+          const effectiveOffset = offset || Math.max(3 / zoomLevel, 1.5);
+          const effLine1StartX = startX + perpX * effectiveOffset;
+          const effLine1StartY = startY + perpY * effectiveOffset;
+          const effLine1EndX = endX + perpX * effectiveOffset;
+          const effLine1EndY = endY + perpY * effectiveOffset;
+          linkPaths.push(drawGatewayLine(effLine1StartX, effLine1StartY, effLine1EndX, effLine1EndY, sourceColor, true, 'forward', gateway, targetGateway));
 
-          // Line 2: Target → Source direction (uses target's volume upgrades)
-          const targetColor = getGatewayColor(targetVolumeUpgrades);
-          const line2StartX = startX - perpX * offset;
-          const line2StartY = startY - perpY * offset;
-          const line2EndX = endX - perpX * offset;
-          const line2EndY = endY - perpY * offset;
-          linkPaths.push(drawGatewayLine(line2StartX, line2StartY, line2EndX, line2EndY, targetColor, true, 'backward', targetGateway, gateway));
+          // Line 2: Target → Source direction (uses target's volume upgrades and operational state)
+          const targetColor = getGatewayColor(targetVolumeUpgrades, targetOperational);
+          const effLine2StartX = startX - perpX * effectiveOffset;
+          const effLine2StartY = startY - perpY * effectiveOffset;
+          const effLine2EndX = endX - perpX * effectiveOffset;
+          const effLine2EndY = endY - perpY * effectiveOffset;
+          // Arrow direction is backward (from target back to source)
+          linkPaths.push(drawGatewayLine(effLine2StartX, effLine2StartY, effLine2EndX, effLine2EndY, targetColor, true, 'backward', targetGateway, gateway));
         } else {
-          // Single line - use minimum volume upgrades for color
+          // Single line - both directions have same volume and both operational (or both non-operational)
           const effectiveVolumeUpgrades = Math.min(sourceVolumeUpgrades, targetVolumeUpgrades);
-          const linkColor = getGatewayColor(effectiveVolumeUpgrades);
+          const effectiveOperational = sourceOperational && targetOperational;
+          const linkColor = getGatewayColor(effectiveVolumeUpgrades, effectiveOperational);
           
-          const showArrow = !isBidirectional;
-          const arrowDir = sourceOperational ? 'forward' : 'backward';
-          linkPaths.push(drawGatewayLine(startX, startY, endX, endY, linkColor, showArrow, arrowDir, gateway, targetGateway));
+          // No arrows for bidirectional same-capacity links
+          linkPaths.push(drawGatewayLine(startX, startY, endX, endY, linkColor, false, 'forward', gateway, targetGateway));
         }
 
         // Add capacity bubbles for each direction
@@ -2289,24 +2303,24 @@ const DataPointOverlay = ({ mapRef }) => {
             const tooltipHtml = [
               '<div style="background: rgba(15, 23, 42, 0.95); padding: 20px 24px; border-radius: 8px; border: 1px solid #334155; box-shadow: 0 6px 16px rgba(0,0,0,0.5); max-width: 480px; font-family: system-ui, -apple-system, sans-serif;">',
               `<div style="color: #f7a600; font-weight: 700; font-size: 16px; margin-bottom: 13px; letter-spacing: 0.7px;">GATEWAY LINK</div>`,
-              // Directional capacity summary
+              // Directional capacity summary - swapped order (target on left, source on right)
               `<div style="display: flex; gap: 10px; margin-bottom: 13px;">`,
-              `<div style="flex: 1; background: ${sourceBubbleColor}22; border: 1px solid ${sourceBubbleColor}; border-radius: 6px; padding: 8px 11px; text-align: center;">`,
-              `<div style="color: #f7a600; font-size: 10px; margin-bottom: 3px;">« TO ${sourcePlanetName}</div>`,
-              `<div style="color: ${sourceBubbleColor}; font-size: 20px; font-weight: 700;">${sourceRemainingJumps}</div>`,
-              `<div style="color: #94a3b8; font-size: 9px;">${sourceCurrentJumps} / ${sourceMaxJumps} used</div>`,
-              `<div style="color: ${sourceFuelColor}; font-size: 9px; margin-top: 3px;">⛽ ${Math.round(sourceFuelRatio * 100)}%</div>`,
-              '</div>',
               `<div style="flex: 1; background: ${targetBubbleColor}22; border: 1px solid ${targetBubbleColor}; border-radius: 6px; padding: 8px 11px; text-align: center;">`,
-              `<div style="color: #f7a600; font-size: 10px; margin-bottom: 3px;">TO ${targetPlanetName} »</div>`,
+              `<div style="color: #f7a600; font-size: 10px; margin-bottom: 3px;">« TO ${targetPlanetName}</div>`,
               `<div style="color: ${targetBubbleColor}; font-size: 20px; font-weight: 700;">${targetRemainingJumps}</div>`,
               `<div style="color: #94a3b8; font-size: 9px;">${targetCurrentJumps} / ${targetMaxJumps} used</div>`,
               `<div style="color: ${targetFuelColor}; font-size: 9px; margin-top: 3px;">⛽ ${Math.round(targetFuelRatio * 100)}%</div>`,
               '</div>',
+              `<div style="flex: 1; background: ${sourceBubbleColor}22; border: 1px solid ${sourceBubbleColor}; border-radius: 6px; padding: 8px 11px; text-align: center;">`,
+              `<div style="color: #f7a600; font-size: 10px; margin-bottom: 3px;">TO ${sourcePlanetName} »</div>`,
+              `<div style="color: ${sourceBubbleColor}; font-size: 20px; font-weight: 700;">${sourceRemainingJumps}</div>`,
+              `<div style="color: #94a3b8; font-size: 9px;">${sourceCurrentJumps} / ${sourceMaxJumps} used</div>`,
+              `<div style="color: ${sourceFuelColor}; font-size: 9px; margin-top: 3px;">⛽ ${Math.round(sourceFuelRatio * 100)}%</div>`,
               '</div>',
-              '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">',
-              // Source gateway
-              '<div style="border-right: 1px solid #334155; padding-right: 19px;">',
+              '</div>',
+              '<div style="display: flex; gap: 20px;">',
+              // Source gateway (left side)
+              '<div style="flex: 1; text-align: left;">',
               `<div style="color: #ffffff; font-weight: 600; font-size: 14px; margin-bottom: 8px;">${gateway.Name || gateway.NaturalId}</div>`,
               `<div style="color: #94a3b8; font-size: 12px;">📍 ${sourcePlanetName}</div>`,
               `<div style="color: ${sourceOperational ? '#4ade80' : '#f87171'}; font-size: 12px; margin-top: 5px;">${sourceOperational ? '● Operational' : '○ ' + gateway.OperationalState}</div>`,
@@ -2316,8 +2330,10 @@ const DataPointOverlay = ({ mapRef }) => {
               `<div style="color: ${sourceFuelColor}; font-size: 12px;">⛽ ${gateway.AvailableFuelUnits?.toLocaleString() || 0} / ${gateway.MaxFuelUnits?.toLocaleString() || 0}</div>`,
               `<div style="color: #22c55e; font-size: 12px;">Fuel for ${sourceJumpsFromFuel} jumps</div>`,
               '</div>',
-              // Target gateway
-              '<div>',
+              // Centered divider
+              '<div style="width: 1px; background: #334155;"></div>',
+              // Target gateway (right side)
+              '<div style="flex: 1; text-align: left;">',
               `<div style="color: #ffffff; font-weight: 600; font-size: 14px; margin-bottom: 8px;">${targetGateway.Name || targetGateway.NaturalId}</div>`,
               `<div style="color: #94a3b8; font-size: 12px;">📍 ${targetPlanetName}</div>`,
               `<div style="color: ${targetOperational ? '#4ade80' : '#f87171'}; font-size: 12px; margin-top: 5px;">${targetOperational ? '● Operational' : '○ ' + targetGateway.OperationalState}</div>`,
@@ -2329,7 +2345,7 @@ const DataPointOverlay = ({ mapRef }) => {
               '</div>',
               '</div>',
               hasVolumeDifference && isBidirectional
-                ? `<div style="color: #fbbf24; font-size: 12px; margin-top: 13px; padding-top: 11px; border-top: 1px solid #334155; text-align: center;">⚡ Asymmetric Capacity (${sourceVolumeUpgrades} ↔ ${targetVolumeUpgrades} upgrades)</div>`
+                ? `<div style="color: #fbbf24; font-size: 12px; margin-top: 13px; padding-top: 11px; border-top: 1px solid #334155; text-align: center;">⚡ Asymmetric Volume (${sourceVolumeUpgrades} ↔ ${targetVolumeUpgrades} upgrades)</div>`
                 : `<div style="color: #64748b; font-size: 12px; margin-top: 13px; padding-top: 11px; border-top: 1px solid #334155; text-align: center;">${isBidirectional ? '↔ Bidirectional' : '→ Unidirectional'}</div>`,
               '</div>'
             ].join('');

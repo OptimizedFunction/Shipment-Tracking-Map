@@ -143,9 +143,9 @@ const GatewayTripCalculator = ({ embedded = false }) => {
         
         const linkedGateway = gatewayNetwork.gateways.get(linkedGatewayId);
         if (!linkedGateway) continue;
-        
-        // Check if linked gateway is operational
-        if (linkedGateway.OperationalState !== 'OPERATIONAL') continue;
+
+        // Note: We only check if the DEPARTING gateway is operational
+        // The arrival gateway's operational state doesn't matter for incoming travel
 
         // Get destination system from the pre-resolved systemId on the linked gateway
         const destSystemId = linkedGateway.systemId;
