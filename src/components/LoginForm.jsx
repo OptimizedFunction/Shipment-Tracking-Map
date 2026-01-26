@@ -3,11 +3,11 @@ import { AuthContext } from '../contexts/AuthContext';
 import './LoginForm.css';
 
 const LoginForm = ({ onClose }) => {
-    const { login, loginWithApiKey, authLoading, authError } = useContext(AuthContext);
-    const [userName, setUserName] = useState('');
-    const [password, setPassword] = useState('');
+    const { loginWithApiKey, authLoading, authError } = useContext(AuthContext);
     const [apiKey, setApiKey] = useState('');
+    const [rememberMe, setRememberMe] = useState(false);
     const [localError, setLocalError] = useState(null);
+    const [successMessage, setSuccessMessage] = useState(null);
 
     useEffect(() => {
         setLocalError(authError);
@@ -24,38 +24,26 @@ const LoginForm = ({ onClose }) => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [onClose]);
 
-    const trimmedUserName = useMemo(() => userName.trim(), [userName]);
-    const trimmedPassword = useMemo(() => password.trim(), [password]);
     const trimmedApiKey = useMemo(() => apiKey.trim(), [apiKey]);
 
     const submitDisabled = useMemo(() => {
-        const hasUserName = trimmedUserName.length > 0;
-        const hasPassword = trimmedPassword.length > 0;
-        const hasApiKey = trimmedApiKey.length > 0;
-        return authLoading || !hasUserName || (!hasPassword && !hasApiKey);
-    }, [authLoading, trimmedUserName, trimmedPassword, trimmedApiKey]);
+        return authLoading || trimmedApiKey.length === 0;
+    }, [authLoading, trimmedApiKey]);
 
     const handleSubmit = async event => {
         event.preventDefault();
         setLocalError(null);
+        setSuccessMessage(null);
 
         try {
-            if (trimmedApiKey.length > 0) {
-                if (!trimmedUserName) {
-                    setLocalError('Username is required when using an API key.');
-                    return;
-                }
-                await loginWithApiKey({ userName: trimmedUserName, apiKey: trimmedApiKey });
-            } else {
-                if (!trimmedPassword) {
-                    setLocalError('Password is required when an API key is not provided.');
-                    return;
-                }
-                await login({ userName: trimmedUserName, password: trimmedPassword });
-            }
-            onClose();
+            const result = await loginWithApiKey({ apiKey: trimmedApiKey, rememberMe });
+            setSuccessMessage(`Welcome, ${result.userName}!`);
+            // Close after a short delay to show the success message
+            setTimeout(() => {
+                onClose();
+            }, 1500);
         } catch (error) {
-            setLocalError(error instanceof Error ? error.message : 'Login failed');
+            setLocalError(error instanceof Error ? error.message : 'Authentication failed');
         }
     };
 
@@ -79,41 +67,13 @@ const LoginForm = ({ onClose }) => {
                     </button>
                 </div>
                 <p className="login-hint">
-                    Enter your FIO username and either a password or an API key. You don&apos;t need both.
+                    Enter your FIO API key to authenticate.
                 </p>
                 <form className="login-form" onSubmit={handleSubmit}>
-                    <label htmlFor="login-username">FIO Username
+                    <label htmlFor="login-api-key">FIO API Key
                         <span className="required-indicator" aria-hidden="true">*</span>
                         <span className="sr-only"> (required)</span>
                     </label>
-                    <input
-                        id="login-username"
-                        name="username"
-                        type="text"
-                        autoComplete="username"
-                        value={userName}
-                        onChange={event => setUserName(event.target.value)}
-                        disabled={authLoading}
-                    />
-
-                    <label htmlFor="login-password">FIO Password (optional if API key provided)</label>
-                    <input
-                        id="login-password"
-                        name="password"
-                        type="password"
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={event => setPassword(event.target.value)}
-                        disabled={authLoading}
-                    />
-
-                    <div className="login-divider" aria-hidden="true">
-                        <span className="divider-line" />
-                        <span className="divider-text">or</span>
-                        <span className="divider-line" />
-                    </div>
-
-                    <label htmlFor="login-api-key">FIO API Key (optional if password entered)</label>
                     <input
                         id="login-api-key"
                         name="apiKey"
@@ -125,9 +85,29 @@ const LoginForm = ({ onClose }) => {
                         placeholder="Paste your API key"
                     />
 
+                    <div className="remember-me-container">
+                        <input
+                            id="login-remember-me"
+                            name="rememberMe"
+                            type="checkbox"
+                            checked={rememberMe}
+                            onChange={event => setRememberMe(event.target.checked)}
+                            disabled={authLoading}
+                        />
+                        <label htmlFor="login-remember-me" className="remember-me-label">
+                            Remember me
+                        </label>
+                    </div>
+
                     {localError && (
                         <div className="login-error" role="alert">
                             {localError}
+                        </div>
+                    )}
+
+                    {successMessage && (
+                        <div className="login-success" role="status">
+                            {successMessage}
                         </div>
                     )}
 
@@ -145,7 +125,7 @@ const LoginForm = ({ onClose }) => {
                             className="primary-button"
                             disabled={submitDisabled}
                         >
-                            {authLoading ? 'Signing In…' : 'Continue'}
+                            {authLoading ? 'Signing In…' : 'Sign In'}
                         </button>
                     </div>
                 </form>

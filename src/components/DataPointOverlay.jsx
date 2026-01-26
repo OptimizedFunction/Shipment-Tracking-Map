@@ -9,7 +9,7 @@ import React, {
 import * as d3 from 'd3';
 import { useDataPoints } from '../contexts/DataPointContext';
 import { GraphContext } from '../contexts/GraphContext';
-import { AuthContext, AUTH_STRATEGIES } from '../contexts/AuthContext';
+import { AuthContext } from '../contexts/AuthContext';
 import { SIL_TRACKER_API_KEY, SIL_TRACKER_USERNAME } from '../constants/silTracking';
 import GatewayTripCalculator from './GatewayTripCalculator';
 
@@ -319,7 +319,6 @@ const DataPointOverlay = ({ mapRef }) => {
   const {
     authToken,
     userName,
-    authStrategy,
     isAuthenticated,
     loginWithApiKey,
     logout
@@ -837,10 +836,9 @@ const DataPointOverlay = ({ mapRef }) => {
 
     previousAuthRef.current = {
       token: authToken,
-      userName,
-      authStrategy: authStrategy || null
+      userName
     };
-  }, [authToken, userName, authStrategy]);
+  }, [authToken, userName]);
 
   // Sync pending username with applied username
   useEffect(() => {
@@ -1171,9 +1169,8 @@ const DataPointOverlay = ({ mapRef }) => {
           && fallback.token
           && fallback.userName
           && fallback.token !== SIL_TRACKER_API_KEY
-          && fallback.authStrategy === AUTH_STRATEGIES.API_KEY
         ) {
-          await loginWithApiKey({ userName: fallback.userName, apiKey: fallback.token });
+          await loginWithApiKey({ apiKey: fallback.token, rememberMe: false });
         } else {
           logout?.();
         }
@@ -1183,23 +1180,22 @@ const DataPointOverlay = ({ mapRef }) => {
         if (authToken && authToken !== SIL_TRACKER_API_KEY) {
           previousAuthRef.current = {
             token: authToken,
-            userName,
-            authStrategy: authStrategy || null
+            userName
           };
         }
 
-        if (!SIL_TRACKER_USERNAME || !SIL_TRACKER_API_KEY) {
+        if (!SIL_TRACKER_API_KEY) {
           throw new Error('SIL tracker credentials are not configured.');
         }
 
-        await loginWithApiKey({ userName: SIL_TRACKER_USERNAME, apiKey: SIL_TRACKER_API_KEY });
+        await loginWithApiKey({ apiKey: SIL_TRACKER_API_KEY, rememberMe: false });
       }
     } catch (error) {
       setSilToggleError(error instanceof Error ? error.message : 'Failed to toggle SIL shipment tracking');
     } finally {
       setSilToggleLoading(false);
     }
-  }, [authToken, authStrategy, loginWithApiKey, logout, userName]);
+  }, [authToken, loginWithApiKey, logout, userName]);
 
   const handleGroupFetch = useCallback(async () => {
     setGroupLoading(true);
