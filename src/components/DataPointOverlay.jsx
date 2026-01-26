@@ -2300,6 +2300,114 @@ const DataPointOverlay = ({ mapRef }) => {
               ? Math.floor(targetGateway.AvailableFuelUnits / targetGateway.FuelPerJump) 
               : 0;
             
+            // Calculate reliability from historical upkeep phases and fuel availability
+            const calculateReliability = (gw) => {
+              const phases = gw.UpkeepPhases || [];
+              
+              // Only consider completed phases (not the current one which may be in progress)
+              const completedPhases = phases.filter(p => {
+                const endDate = new Date(p.End);
+                return endDate < new Date();
+              });
+              
+              // Calculate upkeep reliability
+              let upkeepReliability = null;
+              let fullUpkeepPhases = 0;
+              let totalPhases = 0;
+              
+              if (completedPhases.length > 0) {
+                const totalServiceLevel = completedPhases.reduce((sum, p) => sum + (p.ServiceLevel || 0), 0);
+                upkeepReliability = (totalServiceLevel / completedPhases.length) * 100;
+                fullUpkeepPhases = completedPhases.filter(p => p.ServiceLevel >= 0.999).length;
+                totalPhases = completedPhases.length;
+              }
+              
+              // Calculate fuel reliability from AverageFuelAvailibility and failed jumps
+              const fuelAvailability = gw.AverageFuelAvailibility;
+              const fuelReliability = fuelAvailability !== undefined && fuelAvailability !== null 
+                ? fuelAvailability * 100 
+                : null;
+              
+              // Get failed jumps data
+              const totalJumps = gw.TotalJumps || gw.Jumps || 0;
+              const avgFailedFuel = gw.PhaseAverageJumpsFailedDueInsufficientFuel || 0;
+              const avgFailedInoperative = gw.PhaseAverageJumpsFailedDueInoperative || 0;
+              const avgFailedCapacity = gw.PhaseAverageJumpsFailedDueNoCapacity || 0;
+              const totalAvgFailed = avgFailedFuel + avgFailedInoperative + avgFailedCapacity;
+              
+              // Calculate overall reliability combining upkeep and fuel
+              let overallReliability = null;
+              if (upkeepReliability !== null && fuelReliability !== null) {
+                // Weight: 60% upkeep, 40% fuel availability
+                overallReliability = (upkeepReliability * 0.6) + (fuelReliability * 0.4);
+              } else if (upkeepReliability !== null) {
+                overallReliability = upkeepReliability;
+              } else if (fuelReliability !== null) {
+                overallReliability = fuelReliability;
+              }
+              
+              return {
+                upkeepReliability,
+                fuelReliability,
+                overallReliability,
+                fullUpkeepPhases,
+                totalPhases,
+                avgFailedFuel,
+                avgFailedInoperative,
+                avgFailedCapacity,
+                totalAvgFailed,
+                totalJumps
+              };
+            };
+            
+            const sourceReliability = calculateReliability(gateway);
+            const targetReliability = calculateReliability(targetGateway);
+            
+            // Get reliability color based on percentage
+            const getReliabilityColor = (reliability) => {
+              if (reliability === null) return '#64748b';
+              if (reliability >= 95) return '#22c55e'; // Green
+              if (reliability >= 80) return '#84cc16'; // Lime
+              if (reliability >= 60) return '#fbbf24'; // Yellow
+              if (reliability >= 40) return '#f97316'; // Orange
+              return '#ef4444'; // Red
+            };
+            
+            const sourceReliabilityColor = getReliabilityColor(sourceReliability?.overallReliability);
+            const targetReliabilityColor = getReliabilityColor(targetReliability?.overallReliability);
+            
+            // Format reliability display
+            const formatReliability = (rel, color) => {
+              if (!rel || rel.overallReliability === null) {
+                return `<div style="color: #64748b; font-size: 12px; margin-top: 5px;">📊 Reliability: No history</div>`;
+              }
+              
+              let html = `<div style="color: ${color}; font-size: 12px; margin-top: 5px;">📊 Reliability: ${rel.overallReliability.toFixed(1)}%</div>`;
+              
+              // Show breakdown
+              const details = [];
+              if (rel.upkeepReliability !== null) {
+                details.push(`Upkeep: ${rel.upkeepReliability.toFixed(0)}% (${rel.fullUpkeepPhases}/${rel.totalPhases})`);
+              }
+              if (rel.fuelReliability !== null) {
+                details.push(`Fuel: ${rel.fuelReliability.toFixed(0)}%`);
+              }
+              if (details.length > 0) {
+                html += `<div style="color: #64748b; font-size: 10px;">${details.join(' · ')}</div>`;
+              }
+              
+              // Show failed jumps if any
+              if (rel.totalAvgFailed > 0) {
+                const failDetails = [];
+                if (rel.avgFailedFuel > 0) failDetails.push(`⛽${rel.avgFailedFuel.toFixed(1)}`);
+                if (rel.avgFailedInoperative > 0) failDetails.push(`🔧${rel.avgFailedInoperative.toFixed(1)}`);
+                if (rel.avgFailedCapacity > 0) failDetails.push(`📦${rel.avgFailedCapacity.toFixed(1)}`);
+                html += `<div style="color: #f87171; font-size: 10px;">Avg fails/phase: ${failDetails.join(' ')}</div>`;
+              }
+              
+              return html;
+            };
+            
             const tooltipHtml = [
               '<div style="background: rgba(15, 23, 42, 0.95); padding: 20px 24px; border-radius: 8px; border: 1px solid #334155; box-shadow: 0 6px 16px rgba(0,0,0,0.5); max-width: 480px; font-family: system-ui, -apple-system, sans-serif;">',
               `<div style="color: #f7a600; font-weight: 700; font-size: 16px; margin-bottom: 13px; letter-spacing: 0.7px;">GATEWAY LINK</div>`,
@@ -2329,6 +2437,7 @@ const DataPointOverlay = ({ mapRef }) => {
               `<div style="color: #fb923c; font-size: 12px; margin-top: 5px;">💰 ${gateway.UsageAmount?.toLocaleString() || 0} ${gateway.UsageCurrency || 'AIC'}/jump</div>`,
               `<div style="color: ${sourceFuelColor}; font-size: 12px;">⛽ ${gateway.AvailableFuelUnits?.toLocaleString() || 0} / ${gateway.MaxFuelUnits?.toLocaleString() || 0}</div>`,
               `<div style="color: #22c55e; font-size: 12px;">Fuel for ${sourceJumpsFromFuel} jumps</div>`,
+              formatReliability(sourceReliability, sourceReliabilityColor),
               '</div>',
               // Centered divider
               '<div style="width: 1px; background: #334155;"></div>',
@@ -2342,6 +2451,7 @@ const DataPointOverlay = ({ mapRef }) => {
               `<div style="color: #fb923c; font-size: 12px; margin-top: 5px;">💰 ${targetGateway.UsageAmount?.toLocaleString() || 0} ${targetGateway.UsageCurrency || 'AIC'}/jump</div>`,
               `<div style="color: ${targetFuelColor}; font-size: 12px;">⛽ ${targetGateway.AvailableFuelUnits?.toLocaleString() || 0} / ${targetGateway.MaxFuelUnits?.toLocaleString() || 0}</div>`,
               `<div style="color: #22c55e; font-size: 12px;">Fuel for ${targetJumpsFromFuel} jumps</div>`,
+              formatReliability(targetReliability, targetReliabilityColor),
               '</div>',
               '</div>',
               hasVolumeDifference && isBidirectional
