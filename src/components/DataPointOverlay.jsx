@@ -1840,19 +1840,25 @@ const DataPointOverlay = ({ mapRef }) => {
 
     const flightLayer = getLayer('flight-layer');
     const gatewayLayer = getLayer('gateway-layer');
+    const tripRouteLayer = getLayer('trip-route-layer');
+    const gatewayBubblesLayer = getLayer('gateway-bubbles-layer');
     const overlayLayer = getLayer('overlay-layer');
     const shipLayer = getLayer('ship-layer');
     const tooltipLayer = getLayer('tooltip-layer');
 
     flightLayer.selectAll('*').remove();
     gatewayLayer.selectAll('*').remove();
+    tripRouteLayer.selectAll('*').remove();
+    gatewayBubblesLayer.selectAll('*').remove();
     shipLayer.selectAll('*').remove();
     overlayLayer.selectAll('*').remove();
     tooltipLayer.selectAll('*').remove();
 
-    // Layer ordering: gateways above flights but below ships
+    // Layer ordering: flights < gateway-links < trip-route < gateway-bubbles < overlay < ships < tooltips
     flightLayer.raise();
-    gatewayLayer.raise();  // Gateways above flight paths
+    gatewayLayer.raise();       // Gateway links
+    tripRouteLayer.raise();     // Trip route above gateway links
+    gatewayBubblesLayer.raise(); // Gateway bubbles above trip route
     overlayLayer.raise();
     shipLayer.raise();
     tooltipLayer.raise();
@@ -2106,7 +2112,7 @@ const DataPointOverlay = ({ mapRef }) => {
         };
         
         // Draw source bubble with circular fuel ring
-        const sourceBubbleGroup = gatewayLayer.append('g')
+        const sourceBubbleGroup = gatewayBubblesLayer.append('g')
           .attr('class', 'gateway-capacity-bubble')
           .attr('data-gateway-link', linkKey)
           .style('cursor', 'pointer');
@@ -2179,7 +2185,7 @@ const DataPointOverlay = ({ mapRef }) => {
           .text(sourceRemainingJumps > 999 ? '999+' : sourceRemainingJumps);
         
         // Draw target direction bubble (closer to target gateway)
-        const targetBubbleGroup = gatewayLayer.append('g')
+        const targetBubbleGroup = gatewayBubblesLayer.append('g')
           .attr('class', 'gateway-capacity-bubble')
           .attr('data-gateway-link', linkKey)
           .style('cursor', 'pointer');
@@ -2378,7 +2384,7 @@ const DataPointOverlay = ({ mapRef }) => {
     if (tripCalculatorOpen && tripRoute && tripRoute.path && tripRoute.path.length > 0 && graph?.systems) {
       const tripLayer = getLayer('trip-route-layer');
       tripLayer.selectAll('*').remove();
-      tripLayer.raise(); // Put trip route on top
+      // Layer order already set above - don't raise here
 
       const tripStrokeWidth = Math.max(6 / zoomLevel, 3);
       const glowStrokeWidth = Math.max(12 / zoomLevel, 6);

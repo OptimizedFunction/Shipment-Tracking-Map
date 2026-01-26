@@ -127,7 +127,8 @@ const GatewayTripCalculator = ({ embedded = false }) => {
       const gatewaysHere = gatewayNetwork.systemGateways.get(current.systemId) || [];
       
       for (const gateway of gatewaysHere) {
-        // Check if ship fits
+        // Check if ship fits in departing gateway
+        // Ship only needs to fit in the gateway it's departing from
         if (gateway.MaxShipVolume < tripShipVolume) continue;
         
         // Check if gateway is operational
@@ -145,9 +146,6 @@ const GatewayTripCalculator = ({ embedded = false }) => {
         
         // Check if linked gateway is operational
         if (linkedGateway.OperationalState !== 'OPERATIONAL') continue;
-        
-        // Check if ship fits in linked gateway
-        if (linkedGateway.MaxShipVolume < tripShipVolume) continue;
 
         // Get destination system from the pre-resolved systemId on the linked gateway
         const destSystemId = linkedGateway.systemId;
@@ -262,8 +260,21 @@ const GatewayTripCalculator = ({ embedded = false }) => {
           <label>Ship Volume (m³)</label>
           <input
             type="number"
-            value={tripShipVolume}
-            onChange={(e) => setTripShipVolume(Math.max(1, parseInt(e.target.value) || 1))}
+            value={tripShipVolume === 0 ? '' : tripShipVolume}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === '') {
+                setTripShipVolume(0);
+              } else {
+                setTripShipVolume(Math.max(0, parseInt(val) || 0));
+              }
+            }}
+            onBlur={(e) => {
+              // Ensure minimum value of 1 when leaving the field
+              if (!tripShipVolume || tripShipVolume < 1) {
+                setTripShipVolume(1);
+              }
+            }}
             min="1"
             max="50000"
           />
