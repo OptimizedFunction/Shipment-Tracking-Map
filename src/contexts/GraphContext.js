@@ -24,10 +24,12 @@ export const GraphProvider = ({ children }) => {
   const [contracts, setContracts] = useState([]);
   const [contractSnapshot, setContractSnapshot] = useState([]);
   const [stationData, setStationData] = useState([]);
+  const [systemStars, setSystemStars] = useState([]);
   const [groupShips, setGroupShips] = useState([]);
   const [groupFlights, setGroupFlights] = useState([]);
   const [groupStorageData, setGroupStorageData] = useState([]);
   const [groupContracts, setGroupContracts] = useState([]);
+  const [pathfindingPath, setPathfindingPath] = useState([]);
   const { authToken, userName } = useContext(AuthContext);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
 
@@ -53,6 +55,8 @@ export const GraphProvider = ({ children }) => {
     fetch('systemstars.json')
       .then(response => response.json())
       .then(data => {
+        // Store raw array for 3D map
+        setSystemStars(data);
         // Group planets by SystemId
         const groupedUniverseData = data.reduce((acc, system) => {
           if (!acc[system.SystemId]) {
@@ -239,7 +243,28 @@ export const GraphProvider = ({ children }) => {
   }, [authToken, userName, refetchTrigger]);
 
   const findShortestPath = useCallback((system1, system2) => {
-    findShortestPathUtil(graph, system1, system2, highlightPath);
+    if (system1 === 'rect1' || system2 === 'rect1') {
+      console.error('Invalid system selection for pathfinding:', system1, system2);
+      return;
+    }
+
+    const graphNodes = {};
+    graph.edges.forEach(edge => {
+      if (!graphNodes[edge.start]) graphNodes[edge.start] = {};
+      if (!graphNodes[edge.end]) graphNodes[edge.end] = {};
+      graphNodes[edge.start][edge.end] = edge.distance;
+      graphNodes[edge.end][edge.start] = edge.distance;
+    });
+
+    try {
+      const { find_path } = require('dijkstrajs');
+      const path = find_path(graphNodes, system1, system2);
+      setPathfindingPath(path);
+      highlightPath(path, system2);
+    } catch (error) {
+      console.error('Error finding path:', error);
+      setPathfindingPath([]);
+    }
   }, [graph]);
 
   const contextValue = useMemo(() => ({
@@ -252,6 +277,7 @@ export const GraphProvider = ({ children }) => {
     findShortestPath,
     planetData,
     universeData,
+    systemStars,
     ships,
     flights,
     storageData,
@@ -262,6 +288,8 @@ export const GraphProvider = ({ children }) => {
     groupFlights,
     groupStorageData,
     groupContracts,
+    pathfindingPath,
+    setPathfindingPath,
     setShips,
     setFlights,
     setStorageData,
@@ -279,6 +307,7 @@ export const GraphProvider = ({ children }) => {
     findShortestPath,
     planetData,
     universeData,
+    systemStars,
     ships,
     flights,
     storageData,
@@ -288,7 +317,9 @@ export const GraphProvider = ({ children }) => {
     groupShips,
     groupFlights,
     groupStorageData,
-    groupContracts
+    groupContracts,
+    pathfindingPath,
+    setPathfindingPath
   ]);
 
   return (
