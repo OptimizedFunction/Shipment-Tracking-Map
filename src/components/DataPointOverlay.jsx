@@ -2146,13 +2146,14 @@ const DataPointOverlay = ({ mapRef }) => {
           .attr('opacity', 0.8);
         
         // Source fuel ring fill (arc based on fuel ratio)
-        if (sourceFuelRatio > 0) {
+        // NOTE: Bars were swapped - show the target's fuel bar on the source bubble
+        if (targetFuelRatio > 0) {
           const startAngle = -Math.PI / 2; // Start at top
-          const endAngle = startAngle + (2 * Math.PI * Math.min(sourceFuelRatio, 0.999));
+          const endAngle = startAngle + (2 * Math.PI * Math.min(targetFuelRatio, 0.999));
           sourceBubbleGroup.append('path')
             .attr('d', createArcPath(sourceBubbleX, sourceBubbleY, fuelRingRadius, startAngle, endAngle))
             .attr('fill', 'none')
-            .attr('stroke', sourceFuelColor)
+            .attr('stroke', targetFuelColor)
             .attr('stroke-width', fuelRingWidth)
             .attr('stroke-linecap', 'round')
             .attr('opacity', 0.95);
@@ -2219,13 +2220,14 @@ const DataPointOverlay = ({ mapRef }) => {
           .attr('opacity', 0.8);
         
         // Target fuel ring fill (arc based on fuel ratio)
-        if (targetFuelRatio > 0) {
+        // NOTE: Bars were swapped - show the source's fuel bar on the target bubble
+        if (sourceFuelRatio > 0) {
           const startAngle = -Math.PI / 2; // Start at top
-          const endAngle = startAngle + (2 * Math.PI * Math.min(targetFuelRatio, 0.999));
+          const endAngle = startAngle + (2 * Math.PI * Math.min(sourceFuelRatio, 0.999));
           targetBubbleGroup.append('path')
             .attr('d', createArcPath(targetBubbleX, targetBubbleY, fuelRingRadius, startAngle, endAngle))
             .attr('fill', 'none')
-            .attr('stroke', targetFuelColor)
+            .attr('stroke', sourceFuelColor)
             .attr('stroke-width', fuelRingWidth)
             .attr('stroke-linecap', 'round')
             .attr('opacity', 0.95);
