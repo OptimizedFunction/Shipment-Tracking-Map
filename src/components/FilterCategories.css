@@ -29,6 +29,24 @@
   border-color: #f7a600;
 }
 
+.toggle-token.simulation-toggle {
+  background-color: #3a3a3a;
+  color: #aaa;
+  border-color: #555;
+}
+
+.toggle-token.simulation-toggle.active {
+  background-color: #9333ea;
+  color: white;
+  border-color: #9333ea;
+}
+
+.gateway-toggle {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
 .filter-category select {
   padding: 5px 10px 5px 3px;
   border-radius: 0px 15px 15px 0px;

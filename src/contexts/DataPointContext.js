@@ -28,6 +28,12 @@ export const DataPointProvider = ({ children }) => {
   const [gatewayLoading, setGatewayLoading] = useState(false);
   const [gatewayError, setGatewayError] = useState(null);
 
+  // Simulation mode state
+  const [isSimulationMode, setIsSimulationMode] = useState(false);
+
+  // Gateway bubbles visibility state
+  const [showGatewayBubbles, setShowGatewayBubbles] = useState(true);
+
   // Gateway Trip Calculator state
   const [tripCalculatorOpen, setTripCalculatorOpen] = useState(false);
   const [tripStartSystem, setTripStartSystem] = useState(null);
@@ -175,6 +181,114 @@ export const DataPointProvider = ({ children }) => {
     });
   }, [fetchGatewayData]);
 
+  // Toggle simulation mode
+  const toggleSimulationMode = useCallback(() => {
+    setIsSimulationMode(prev => !prev);
+  }, []);
+
+  // Toggle gateway bubbles visibility
+  const toggleGatewayBubbles = useCallback(() => {
+    setShowGatewayBubbles(prev => !prev);
+  }, []);
+
+  // Simulated gateway data - creates pairs of gateways with established links
+  const simulatedGatewayData = useMemo(() => {
+    // Helper to create a gateway pair (bidirectional link)
+    const createGatewayPair = (name1, loc1, name2, loc2, volumeUpgrades, maxVolume) => {
+      const id1 = `sim-${loc1}-${loc2}`;
+      const id2 = `sim-${loc2}-${loc1}`;
+      return [
+        {
+          GatewayId: id1,
+          Name: `${name1} to ${name2} (Simulated)`,
+          NaturalId: `SIM-${loc1}`,
+          LocationNaturalId: loc1,
+          OperationalState: 'OPERATIONAL',
+          JumpsPerDay: 250,
+          MaxShipVolume: maxVolume,
+          VolumeUpgrades: volumeUpgrades,
+          CapacityUpgrades: 0,
+          OutgoingLink: id2,
+          IncomingLinks: [id2],
+          LinkStatus: 'ESTABLISHED',
+          FuelPerJump: 30,
+          AvailableFuelUnits: 25000,
+          MaxFuelUnits: 25000,
+          UsageAmount: 0,
+          UsageCurrency: 'CIS',
+          CurrentPhaseJumps: 0,
+          isSimulated: true
+        },
+        {
+          GatewayId: id2,
+          Name: `${name2} to ${name1} (Simulated)`,
+          NaturalId: `SIM-${loc2}`,
+          LocationNaturalId: loc2,
+          OperationalState: 'OPERATIONAL',
+          JumpsPerDay: 250,
+          MaxShipVolume: maxVolume,
+          VolumeUpgrades: volumeUpgrades,
+          CapacityUpgrades: 0,
+          OutgoingLink: id1,
+          IncomingLinks: [id1],
+          LinkStatus: 'ESTABLISHED',
+          FuelPerJump: 30,
+          AvailableFuelUnits: 25000,
+          MaxFuelUnits: 25000,
+          UsageAmount: 0,
+          UsageCurrency: 'CIS',
+          CurrentPhaseJumps: 0,
+          isSimulated: true
+        }
+      ];
+    };
+
+    // 3 volume upgrades, 6000 m3 max volume links
+    const highVolumeLinks = [
+      ['Katoa', 'UV-351a', 'Etherwind', 'KW-688c'],
+      ['Katoa', 'UV-351a', 'Kiruna', 'XH-594b'],
+      ['Ashland', 'PD-754d', 'Promitor', 'VH-331a'],
+      ['Etherwind', 'KW-688c', 'Griffonstone', 'LS-300c'],
+      ['Griffonstone', 'LS-300c', 'Hephaestus', 'ZV-307c'],
+      ['Hephaestus', 'ZV-307c', 'IA-158d', 'IA-158d'],
+      ['IA-158b', 'IA-158b', 'Promitor', 'VH-331a'],
+      ['Promitor', 'VH-331a', 'Berthier', 'OF-375b'],
+      ['Berthier', 'OF-375b', 'LB-428d', 'LB-428d'],
+      ['LB-428d', 'LB-428d', 'Montem', 'OT-580b'],
+      ['Montem', 'OT-580b', 'Circe', 'QQ-001b'],
+      ['Montem', 'OT-580b', 'Kiruna', 'XH-594b'],
+      ['Berthier', 'OF-375b', 'GY-694d', 'GY-694d'],
+      ['Promitor', 'VH-331a', 'Nova Honshu', 'BS-788c'],
+      ['Montem', 'OT-580b', 'Sand', 'WB-675c'],
+      ['Sand', 'WB-675c', 'Verdant', 'YI-715b'],
+      ['Katoa', 'UV-351a', 'Cadia', 'HM-301b'],
+      ['Cadia', 'HM-301b', 'Ementior', 'AM-783c']
+    ];
+
+    // 1 volume upgrade, 3000 m3 max volume links
+    const lowVolumeLinks = [
+      ['Etherwind', 'KW-688c', 'Ashland', 'PD-754d'],
+      ['Nova Honshu', 'BS-788c', 'Boucher', 'FK-794b']
+    ];
+
+    const allGateways = [];
+    
+    highVolumeLinks.forEach(([name1, loc1, name2, loc2]) => {
+      allGateways.push(...createGatewayPair(name1, loc1, name2, loc2, 3, 6000));
+    });
+    
+    lowVolumeLinks.forEach(([name1, loc1, name2, loc2]) => {
+      allGateways.push(...createGatewayPair(name1, loc1, name2, loc2, 1, 3000));
+    });
+
+    return allGateways;
+  }, []);
+
+  // Effective gateway data based on simulation mode
+  const effectiveGatewayData = useMemo(() => {
+    return isSimulationMode ? simulatedGatewayData : gatewayData;
+  }, [isSimulationMode, simulatedGatewayData, gatewayData]);
+
   // Trip Calculator functions
   const toggleTripCalculator = useCallback(() => {
     setTripCalculatorOpen(prev => !prev);
@@ -240,10 +354,16 @@ export const DataPointProvider = ({ children }) => {
     maxValues,
     // Gateway related
     isGatewayLayerVisible,
-    gatewayData,
+    gatewayData: effectiveGatewayData,
     gatewayLoading,
     gatewayError,
     toggleGatewayLayer,
+    // Simulation mode
+    isSimulationMode,
+    toggleSimulationMode,
+    // Gateway bubbles
+    showGatewayBubbles,
+    toggleGatewayBubbles,
     // Trip Calculator related
     tripCalculatorOpen,
     setTripCalculatorOpen,

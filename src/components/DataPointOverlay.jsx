@@ -287,6 +287,7 @@ const DataPointOverlay = ({ mapRef }) => {
     toggleShipLabels,
     isGatewayLayerVisible,
     gatewayData,
+    showGatewayBubbles,
     tripRoute,
     tripStartSystem,
     tripEndSystem,
@@ -2041,26 +2042,15 @@ const DataPointOverlay = ({ mapRef }) => {
           linkPaths.push(drawGatewayLine(startX, startY, endX, endY, linkColor, false, 'forward', gateway, targetGateway));
         }
 
-        // Add capacity bubbles for each direction
-        const midX = (startX + endX) / 2;
-        const midY = (startY + endY) / 2;
-        
-        // Calculate direction for positioning bubbles
-        const linkDx = endX - startX;
-        const linkDy = endY - startY;
-        const linkLen = Math.sqrt(linkDx * linkDx + linkDy * linkDy);
-        const linkDirX = linkDx / linkLen;
-        const linkDirY = linkDy / linkLen;
-        const linkPerpX = -linkDy / linkLen;
-        const linkPerpY = linkDx / linkLen;
-        
-        // Current phase jumps vs max jumps per phase (JumpsPerDay is actually per phase/week)
+        // Variables to track bubble groups (may be null if bubbles disabled)
+        let sourceBubbleGroup = null;
+        let targetBubbleGroup = null;
+
+        // Calculate capacity/fuel data (always needed for tooltips)
         const sourceCurrentJumps = gateway.CurrentPhaseJumps || 0;
         const targetCurrentJumps = targetGateway.CurrentPhaseJumps || 0;
         const sourceMaxJumps = gateway.JumpsPerDay || 250;
         const targetMaxJumps = targetGateway.JumpsPerDay || 250;
-        
-        // Remaining jumps for each direction
         const sourceRemainingJumps = Math.max(0, sourceMaxJumps - sourceCurrentJumps);
         const targetRemainingJumps = Math.max(0, targetMaxJumps - targetCurrentJumps);
         
@@ -2075,17 +2065,8 @@ const DataPointOverlay = ({ mapRef }) => {
         
         const sourceBubbleColor = getCapacityColor(sourceRemainingJumps, sourceMaxJumps);
         const targetBubbleColor = getCapacityColor(targetRemainingJumps, targetMaxJumps);
-        const bubbleRadius = Math.max(12 / zoomLevel, 7);
-        const bubbleFontSize = Math.max(9 / zoomLevel, 5);
-        
-        // Position bubbles along the link - offset from center toward each gateway
-        const bubbleOffset = Math.max(20 / zoomLevel, 12);
-        const sourceBubbleX = midX - linkDirX * bubbleOffset;
-        const sourceBubbleY = midY - linkDirY * bubbleOffset;
-        const targetBubbleX = midX + linkDirX * bubbleOffset;
-        const targetBubbleY = midY + linkDirY * bubbleOffset;
-        
-        // Calculate fuel stats for circular fuel indicators
+
+        // Calculate fuel stats
         const sourceFuel = gateway.AvailableFuelUnits || 0;
         const sourceMaxFuel = gateway.MaxFuelUnits || 25000;
         const targetFuel = targetGateway.AvailableFuelUnits || 0;
@@ -2102,6 +2083,30 @@ const DataPointOverlay = ({ mapRef }) => {
         };
         const sourceFuelColor = getFuelColor(sourceFuelRatio);
         const targetFuelColor = getFuelColor(targetFuelRatio);
+
+        // Add capacity bubbles for each direction (only if showGatewayBubbles is true)
+        if (showGatewayBubbles) {
+        const midX = (startX + endX) / 2;
+        const midY = (startY + endY) / 2;
+        
+        // Calculate direction for positioning bubbles
+        const linkDx = endX - startX;
+        const linkDy = endY - startY;
+        const linkLen = Math.sqrt(linkDx * linkDx + linkDy * linkDy);
+        const linkDirX = linkDx / linkLen;
+        const linkDirY = linkDy / linkLen;
+        const linkPerpX = -linkDy / linkLen;
+        const linkPerpY = linkDx / linkLen;
+        
+        const bubbleRadius = Math.max(12 / zoomLevel, 7);
+        const bubbleFontSize = Math.max(9 / zoomLevel, 5);
+        
+        // Position bubbles along the link - offset from center toward each gateway
+        const bubbleOffset = Math.max(20 / zoomLevel, 12);
+        const sourceBubbleX = midX - linkDirX * bubbleOffset;
+        const sourceBubbleY = midY - linkDirY * bubbleOffset;
+        const targetBubbleX = midX + linkDirX * bubbleOffset;
+        const targetBubbleY = midY + linkDirY * bubbleOffset;
         
         // Circular fuel ring parameters
         const fuelRingRadius = bubbleRadius + Math.max(4 / zoomLevel, 2.5);
@@ -2122,7 +2127,7 @@ const DataPointOverlay = ({ mapRef }) => {
         };
         
         // Draw source bubble with circular fuel ring
-        const sourceBubbleGroup = gatewayBubblesLayer.append('g')
+        sourceBubbleGroup = gatewayBubblesLayer.append('g')
           .attr('class', 'gateway-capacity-bubble')
           .attr('data-gateway-link', linkKey)
           .style('cursor', 'pointer');
@@ -2195,7 +2200,7 @@ const DataPointOverlay = ({ mapRef }) => {
           .text(sourceRemainingJumps > 999 ? '999+' : sourceRemainingJumps);
         
         // Draw target direction bubble (closer to target gateway)
-        const targetBubbleGroup = gatewayBubblesLayer.append('g')
+        targetBubbleGroup = gatewayBubblesLayer.append('g')
           .attr('class', 'gateway-capacity-bubble')
           .attr('data-gateway-link', linkKey)
           .style('cursor', 'pointer');
@@ -2266,6 +2271,7 @@ const DataPointOverlay = ({ mapRef }) => {
           .attr('stroke-width', Math.max(0.5 / zoomLevel, 0.3))
           .attr('paint-order', 'stroke')
           .text(targetRemainingJumps > 999 ? '999+' : targetRemainingJumps);
+        } // End of showGatewayBubbles conditional
 
         // Look up planet names for gateway locations
         const sourcePlanet = planetsByNaturalId.get(gateway.LocationNaturalId?.toUpperCase());
@@ -2275,9 +2281,9 @@ const DataPointOverlay = ({ mapRef }) => {
 
         // Add hover tooltip to all link paths and bubbles
         const allHoverables = [...linkPaths];
-        // Add bubble groups to hoverables
-        allHoverables.push(sourceBubbleGroup);
-        allHoverables.push(targetBubbleGroup);
+        // Add bubble groups to hoverables (if they exist)
+        if (sourceBubbleGroup) allHoverables.push(sourceBubbleGroup);
+        if (targetBubbleGroup) allHoverables.push(targetBubbleGroup);
         
         allHoverables.forEach(element => {
           element
@@ -6074,7 +6080,7 @@ const DataPointOverlay = ({ mapRef }) => {
       addBarHoverEffects(densityBar, 'Density', density, densityColorScale);
       addBarHoverEffects(luminosityBar, 'Luminosity', luminosity, luminosityColorScale);
     });
-  }, [mapRef, isOverlayVisible, isLoading, error, meteorDensityData, luminosityData, systemNames, maxValues, combinedShips, combinedFlights, graph, selectedShipId, planetLookups, systemLookups, showShipLabels, getShipLoadInfoById, getLoadColorForRatio, buildLoadSummary, buildShipmentTiles, buildLoadBarDescriptors, formatCapacityValue, partnerFilterActive, partnerFilteredShipments, filterShipmentsByPartner, systemShipmentCounts, isGatewayLayerVisible, gatewayData, systemIdByNaturalId, tripCalculatorOpen, tripRoute, tripStartSystem, tripEndSystem]);
+  }, [mapRef, isOverlayVisible, isLoading, error, meteorDensityData, luminosityData, systemNames, maxValues, combinedShips, combinedFlights, graph, selectedShipId, planetLookups, systemLookups, showShipLabels, getShipLoadInfoById, getLoadColorForRatio, buildLoadSummary, buildShipmentTiles, buildLoadBarDescriptors, formatCapacityValue, partnerFilterActive, partnerFilteredShipments, filterShipmentsByPartner, systemShipmentCounts, isGatewayLayerVisible, gatewayData, systemIdByNaturalId, tripCalculatorOpen, tripRoute, tripStartSystem, tripEndSystem, showGatewayBubbles]);
 
   useEffect(() => {
     renderOverlay();
