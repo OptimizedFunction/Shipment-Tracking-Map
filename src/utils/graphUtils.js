@@ -27,6 +27,28 @@ export const findShortestPath = (graph, system1, system2, highlightPath) => {
 // Function to reset all nodes and paths
 export const resetGraphState = (nextSelectedSystem) => {
   const svg = d3.select('#map-container svg');
+  
+  // Helper to check if element is inside an overlay layer
+  const isInOverlayLayer = (element) => {
+    let parent = element.parentNode;
+    while (parent && parent !== svg.node()) {
+      const parentClass = parent.getAttribute?.('class') || '';
+      if (parentClass.includes('flight-layer') ||
+          parentClass.includes('gateway-layer') ||
+          parentClass.includes('gateway-bubbles-layer') ||
+          parentClass.includes('trip-route-layer') ||
+          parentClass.includes('overlay-layer') ||
+          parentClass.includes('ship-layer') ||
+          parentClass.includes('tooltip-layer') ||
+          parentClass.includes('permanent-station-markers') ||
+          parentClass.includes('destination-markers')) {
+        return true;
+      }
+      parent = parent.parentNode;
+    }
+    return false;
+  };
+  
   // Reset all system nodes color and stroke except the background rect and current selection
   svg.selectAll('rect').each(function () {
     const node = d3.select(this);
@@ -36,6 +58,7 @@ export const resetGraphState = (nextSelectedSystem) => {
       && !node.classed('search-highlight')
       && !node.classed('cogc-overlay-rect')
       && !node.classed('data-overlay')
+      && !isInOverlayLayer(this)
     ) {
       node
         .attr('fill', colors.resetSystemFill)
@@ -45,12 +68,24 @@ export const resetGraphState = (nextSelectedSystem) => {
     }
   });
 
-  // Reset all paths color and stroke
+  // Reset all paths color and stroke, excluding overlay elements
   svg.selectAll('path').each(function () {
-    d3.select(this)
+    const pathNode = d3.select(this);
+    // Skip gateway links, flight paths, trip routes, and other overlay elements
+    if (pathNode.classed('gateway-link') || 
+        pathNode.classed('flight-path') || 
+        pathNode.classed('trip-route') ||
+        pathNode.classed('gateway-arrow') ||
+        pathNode.attr('data-gateway-link') ||
+        isInOverlayLayer(this)) {
+      return;
+    }
+    pathNode
       .attr('stroke', colors.resetPathStroke)
       .attr('stroke-width', colors.resetPathStrokeWidth);
   });
+  
+  // Note: We no longer reset circles as they may be part of overlay layers
 };
 
 // Function to highlight the path
