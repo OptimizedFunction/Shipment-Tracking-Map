@@ -326,6 +326,28 @@
   margin-bottom: 4px;
 }
 
+.gtc-step-via {
+  font-size: 10px;
+  font-style: italic;
+  margin-bottom: 4px;
+}
+
+.gtc-route-step.gtc-step-gateway .gtc-step-via {
+  color: #a78bfa;
+}
+
+.gtc-route-step.gtc-step-ftl .gtc-step-via {
+  color: #34d399;
+}
+
+.gtc-route-step.gtc-step-gateway .gtc-step-number {
+  background: #a78bfa;
+}
+
+.gtc-route-step.gtc-step-ftl .gtc-step-number {
+  background: #34d399;
+}
+
 .gtc-step-meta {
   display: flex;
   gap: 12px;

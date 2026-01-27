@@ -83,12 +83,33 @@ const GatewayTripCalculator = ({ embedded = false }) => {
     return euclideanDistance / 12;
   };
 
-  // Find best gateway route using Dijkstra's algorithm
+  // Build FTL lane adjacency map from graph edges
+  const ftlAdjacency = useMemo(() => {
+    if (!graph?.edges) return new Map();
+    
+    const adjacency = new Map();
+    graph.edges.forEach(edge => {
+      // Add both directions since FTL lanes are bidirectional
+      if (!adjacency.has(edge.start)) {
+        adjacency.set(edge.start, []);
+      }
+      adjacency.get(edge.start).push({ to: edge.end, distance: edge.distance });
+      
+      if (!adjacency.has(edge.end)) {
+        adjacency.set(edge.end, []);
+      }
+      adjacency.get(edge.end).push({ to: edge.start, distance: edge.distance });
+    });
+    
+    return adjacency;
+  }, [graph]);
+
+  // Find best route using Dijkstra's algorithm (combining gateways and FTL lanes)
   const calculatedRoute = useMemo(() => {
     const startId = tripStartSystem?.id;
     const endId = tripEndSystem?.id;
 
-    if (!startId || !endId || !gatewayNetwork || !graph) {
+    if (!startId || !endId || !graph) {
       return null;
     }
 
@@ -96,22 +117,30 @@ const GatewayTripCalculator = ({ embedded = false }) => {
 
     // Priority queue implementation
     const pq = [];
-    const distances = new Map();
+    const bestCosts = new Map(); // Track best routing cost to each system
     const visited = new Set();
 
     // Initialize: start from the start system
     pq.push({
       systemId: startId,
-      totalDistance: 0,
+      routingCost: 0,      // Cost for pathfinding (includes penalties)
+      totalDistance: 0,    // Actual distance (no penalties) for display
       path: [],
       totalFees: {}, // Map of currency -> amount
-      totalTime: 0, // in minutes
+      totalTime: 0, // in minutes (total time)
+      gatewayTime: 0, // Gateway-only time for tiebreaking
+      gatewayJumps: 0,
+      ftlJumps: 0,
     });
-    distances.set(startId, 0);
+    bestCosts.set(startId, 0);
 
     while (pq.length > 0) {
-      // Sort and get minimum distance node
-      pq.sort((a, b) => a.totalDistance - b.totalDistance);
+      // Sort by: 1) routing cost, 2) fewer FTL jumps, 3) less gateway time
+      pq.sort((a, b) => {
+        if (a.routingCost !== b.routingCost) return a.routingCost - b.routingCost;
+        if (a.ftlJumps !== b.ftlJumps) return a.ftlJumps - b.ftlJumps;
+        return a.gatewayTime - b.gatewayTime;
+      });
       const current = pq.shift();
 
       if (visited.has(current.systemId)) continue;
@@ -123,76 +152,139 @@ const GatewayTripCalculator = ({ embedded = false }) => {
         return current;
       }
 
-      // Explore gateway connections from this system
-      const gatewaysHere = gatewayNetwork.systemGateways.get(current.systemId) || [];
-      
-      for (const gateway of gatewaysHere) {
-        // Check if ship fits in departing gateway
-        // Ship only needs to fit in the gateway it's departing from
-        if (gateway.MaxShipVolume < tripShipVolume) continue;
+      // === Explore GATEWAY connections from this system ===
+      if (gatewayNetwork) {
+        const gatewaysHere = gatewayNetwork.systemGateways.get(current.systemId) || [];
         
-        // Check if gateway is operational
-        if (gateway.OperationalState !== 'OPERATIONAL') continue;
-        
-        // Check if gateway has established link
-        if (gateway.LinkStatus !== 'ESTABLISHED') continue;
-        
-        // Check if gateway has outgoing link
-        const linkedGatewayId = gatewayNetwork.links.get(gateway.GatewayId);
-        if (!linkedGatewayId) continue;
-        
-        const linkedGateway = gatewayNetwork.gateways.get(linkedGatewayId);
-        if (!linkedGateway) continue;
+        for (const gateway of gatewaysHere) {
+          // Check if ship fits in departing gateway
+          if (gateway.MaxShipVolume < tripShipVolume) continue;
+          
+          // Check if gateway is operational
+          if (gateway.OperationalState !== 'OPERATIONAL') continue;
+          
+          // Check if gateway has established link
+          if (gateway.LinkStatus !== 'ESTABLISHED') continue;
+          
+          // Check if gateway has outgoing link
+          const linkedGatewayId = gatewayNetwork.links.get(gateway.GatewayId);
+          if (!linkedGatewayId) continue;
+          
+          const linkedGateway = gatewayNetwork.gateways.get(linkedGatewayId);
+          if (!linkedGateway) continue;
 
-        // Note: We only check if the DEPARTING gateway is operational
-        // The arrival gateway's operational state doesn't matter for incoming travel
+          // Get destination system from the pre-resolved systemId on the linked gateway
+          const destSystemId = linkedGateway.systemId;
+          if (!destSystemId) continue;
+          
+          if (visited.has(destSystemId)) continue;
 
-        // Get destination system from the pre-resolved systemId on the linked gateway
-        const destSystemId = linkedGateway.systemId;
-        if (!destSystemId || visited.has(destSystemId)) continue;
+          // Calculate actual 3D distance between source and destination systems
+          const gatewayJumpDistance = getSystem3DDistance(current.systemId, destSystemId);
+          if (gatewayJumpDistance === Infinity) continue;
+          
+          // Hop penalty: add fixed cost per jump to prefer fewer hops
+          // Gateway hops get a smaller penalty since they're preferred
+          const HOP_PENALTY_GATEWAY = 2; // parsecs equivalent per gateway hop
+          const newRoutingCost = current.routingCost + gatewayJumpDistance + HOP_PENALTY_GATEWAY;
+          const newTotalDistance = current.totalDistance + gatewayJumpDistance; // Actual distance without penalty
+          
+          // Calculate fees (source gateway charges) - track by currency
+          const fee = gateway.UsageAmount || 0;
+          const feeCurrency = gateway.UsageCurrency || 'AIC';
+          const newFees = { ...current.totalFees };
+          if (fee > 0) {
+            newFees[feeCurrency] = (newFees[feeCurrency] || 0) + fee;
+          }
+          
+          // Calculate time: 20 minutes flat per gateway jump + travel time (3pc/hr)
+          const travelTimeMinutes = (gatewayJumpDistance / 3) * 60;
+          const jumpTime = 20 + travelTimeMinutes; // 20 min per jump + travel
+          const newTime = current.totalTime + jumpTime;
+          const newGatewayTime = current.gatewayTime + jumpTime;
 
-        // Calculate actual 3D distance between source and destination systems
-        const gatewayJumpDistance = getSystem3DDistance(current.systemId, destSystemId);
-        if (gatewayJumpDistance === Infinity) continue;
-        
-        const newDistance = current.totalDistance + gatewayJumpDistance;
-        
-        // Calculate fees (source gateway charges) - track by currency
-        const fee = gateway.UsageAmount || 0;
-        const feeCurrency = gateway.UsageCurrency || 'AIC';
-        const newFees = { ...current.totalFees };
-        if (fee > 0) {
-          newFees[feeCurrency] = (newFees[feeCurrency] || 0) + fee;
+          if (!bestCosts.has(destSystemId) || newRoutingCost < bestCosts.get(destSystemId)) {
+            bestCosts.set(destSystemId, newRoutingCost);
+            
+            const newPath = [...current.path, {
+              type: 'gateway',
+              fromSystem: current.systemId,
+              toSystem: destSystemId,
+              fromSystemName: systemNames[current.systemId] || current.systemId?.substring(0, 8),
+              toSystemName: systemNames[destSystemId] || destSystemId?.substring(0, 8),
+              gateway: gateway,
+              linkedGateway: linkedGateway,
+              fee: fee,
+              feeCurrency: feeCurrency,
+              distance: gatewayJumpDistance,
+              time: jumpTime,
+            }];
+
+            pq.push({
+              systemId: destSystemId,
+              routingCost: newRoutingCost,
+              totalDistance: newTotalDistance,
+              path: newPath,
+              totalFees: newFees,
+              totalTime: newTime,
+              gatewayTime: newGatewayTime,
+              gatewayJumps: current.gatewayJumps + 1,
+              ftlJumps: current.ftlJumps,
+            });
+          }
         }
-        
-        // Calculate time: 20 minutes flat per gateway jump + travel time (3pc/hr)
-        const travelTimeMinutes = (gatewayJumpDistance / 3) * 60;
-        const jumpTime = 20 + travelTimeMinutes; // 20 min per jump + travel
-        const newTime = current.totalTime + jumpTime;
+      }
 
-        if (!distances.has(destSystemId) || newDistance < distances.get(destSystemId)) {
-          distances.set(destSystemId, newDistance);
+      // === Explore FTL LANE connections from this system ===
+      const ftlNeighbors = ftlAdjacency.get(current.systemId) || [];
+      
+      // Hop penalty for FTL - higher than gateway to prefer gateway routes
+      const HOP_PENALTY_FTL = 5; // parsecs equivalent per FTL hop
+      
+      for (const neighbor of ftlNeighbors) {
+        const destSystemId = neighbor.to;
+        if (visited.has(destSystemId)) continue;
+
+        // Use true 3D distance for FTL segments
+        const ftlDistance = getSystem3DDistance(current.systemId, destSystemId);
+        if (ftlDistance === Infinity) continue;
+        
+        // Add hop penalty to prefer fewer jumps and gateway routes
+        const newRoutingCost = current.routingCost + ftlDistance + HOP_PENALTY_FTL;
+        const newTotalDistance = current.totalDistance + ftlDistance; // Actual distance without penalty
+        
+        // FTL lanes are free
+        const newFees = { ...current.totalFees };
+        
+        // Calculate time for FTL: travel time at 3pc/hr
+        const travelTimeMinutes = (ftlDistance / 3) * 60;
+        const newTime = current.totalTime + travelTimeMinutes;
+
+        if (!bestCosts.has(destSystemId) || newRoutingCost < bestCosts.get(destSystemId)) {
+          bestCosts.set(destSystemId, newRoutingCost);
           
           const newPath = [...current.path, {
-            type: 'gateway',
+            type: 'ftl',
             fromSystem: current.systemId,
             toSystem: destSystemId,
             fromSystemName: systemNames[current.systemId] || current.systemId?.substring(0, 8),
             toSystemName: systemNames[destSystemId] || destSystemId?.substring(0, 8),
-            gateway: gateway,
-            linkedGateway: linkedGateway,
-            fee: fee,
-            feeCurrency: feeCurrency,
-            distance: gatewayJumpDistance,
-            time: jumpTime,
+            fee: 0,
+            feeCurrency: null,
+            distance: ftlDistance,
+            time: travelTimeMinutes,
           }];
 
           pq.push({
             systemId: destSystemId,
-            totalDistance: newDistance,
+            routingCost: newRoutingCost,
+            totalDistance: newTotalDistance,
             path: newPath,
             totalFees: newFees,
             totalTime: newTime,
+            gatewayTime: current.gatewayTime, // FTL doesn't add to gateway time
+            gatewayJumps: current.gatewayJumps,
+            ftlJumps: current.ftlJumps + 1,
           });
         }
       }
@@ -201,7 +293,7 @@ const GatewayTripCalculator = ({ embedded = false }) => {
     setIsCalculating(false);
     return null; // No route found
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tripStartSystem, tripEndSystem, gatewayNetwork, graph, tripShipVolume, systemNames, systemPositions3D]);
+  }, [tripStartSystem, tripEndSystem, gatewayNetwork, graph, tripShipVolume, systemNames, systemPositions3D, ftlAdjacency]);
 
   // Sync calculated route to context for map visualization
   useEffect(() => {
@@ -338,15 +430,21 @@ const GatewayTripCalculator = ({ embedded = false }) => {
                 </span>
               </div>
               <div className="gtc-summary-item">
-                <span className="gtc-summary-label">Total Time</span>
+                <span className="gtc-summary-label">Gateway Travel Time</span>
                 <span className="gtc-summary-value gtc-time">
-                  {formatTime(calculatedRoute.totalTime)}
+                  {formatTime(calculatedRoute.path.filter(s => s.type === 'gateway').reduce((sum, s) => sum + (s.time || 0), 0))}
                 </span>
               </div>
               <div className="gtc-summary-item">
                 <span className="gtc-summary-label">Gateway Jumps</span>
                 <span className="gtc-summary-value">
-                  {calculatedRoute.path.length}
+                  {calculatedRoute.gatewayJumps || calculatedRoute.path.filter(s => s.type === 'gateway').length}
+                </span>
+              </div>
+              <div className="gtc-summary-item">
+                <span className="gtc-summary-label">FTL Jumps</span>
+                <span className="gtc-summary-value">
+                  {calculatedRoute.ftlJumps || calculatedRoute.path.filter(s => s.type === 'ftl').length}
                 </span>
               </div>
             </div>
@@ -355,20 +453,35 @@ const GatewayTripCalculator = ({ embedded = false }) => {
               <div className="gtc-route-header">Route Details ({calculatedRoute.path.length} Jump{calculatedRoute.path.length !== 1 ? 's' : ''})</div>
               <div className="gtc-route-list">
                 {calculatedRoute.path.map((step, index) => (
-                  <div key={index} className="gtc-route-step gtc-step-gateway">
+                  <div key={index} className={`gtc-route-step ${step.type === 'gateway' ? 'gtc-step-gateway' : 'gtc-step-ftl'}`}>
                     <div className="gtc-step-number">{index + 1}</div>
                     <div className="gtc-step-details">
                       <div className="gtc-step-info">
                         {step.fromSystemName} → {step.toSystemName}
                       </div>
-                      <div className="gtc-step-gateway">
-                        via {step.gateway.Name || step.gateway.NaturalId}
-                      </div>
-                      <div className="gtc-step-meta">
-                        <span className="gtc-step-fee">💰 {step.fee.toLocaleString()} {step.feeCurrency}</span>
-                        <span className="gtc-step-distance">📏 {step.distance.toFixed(1)} pc</span>
-                        <span className="gtc-step-time">⏱ {formatTime(step.time)}</span>
-                      </div>
+                      {step.type === 'gateway' ? (
+                        <>
+                          <div className="gtc-step-via">
+                            🌀 via {step.gateway?.Name || step.gateway?.NaturalId || 'Gateway'}
+                          </div>
+                          <div className="gtc-step-meta">
+                            <span className="gtc-step-fee">💰 {(step.fee || 0).toLocaleString()} {step.feeCurrency || 'AIC'}</span>
+                            <span className="gtc-step-distance">📏 {step.distance.toFixed(1)} pc</span>
+                            <span className="gtc-step-time">⏱ {formatTime(step.time)}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="gtc-step-via">
+                            🚀 FTL Lane
+                          </div>
+                          <div className="gtc-step-meta">
+                            <span className="gtc-step-fee">✨ Free</span>
+                            <span className="gtc-step-distance">📏 {step.distance.toFixed(1)} pc</span>
+                            <span className="gtc-step-time">⏱ {formatTime(step.time)}</span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -381,7 +494,7 @@ const GatewayTripCalculator = ({ embedded = false }) => {
           <div className="gtc-no-route">
             <span className="gtc-no-route-icon">⚠️</span>
             <span className="gtc-no-route-text">No Route</span>
-            <small>No gateway path exists between these systems for your ship size ({tripShipVolume} m³).</small>
+            <small>No path exists between these systems for your ship size ({tripShipVolume} m³).</small>
           </div>
         )}
       </div>

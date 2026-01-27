@@ -1840,6 +1840,7 @@ const DataPointOverlay = ({ mapRef }) => {
     const tripRouteLayer = getLayer('trip-route-layer');
     const gatewayBubblesLayer = getLayer('gateway-bubbles-layer');
     const overlayLayer = getLayer('overlay-layer');
+    const tripMarkersLayer = getLayer('trip-markers-layer'); // S/E markers above overlay
     const shipLayer = getLayer('ship-layer');
     const tooltipLayer = getLayer('tooltip-layer');
 
@@ -1849,14 +1850,16 @@ const DataPointOverlay = ({ mapRef }) => {
     gatewayBubblesLayer.selectAll('*').remove();
     shipLayer.selectAll('*').remove();
     overlayLayer.selectAll('*').remove();
+    tripMarkersLayer.selectAll('*').remove();
     tooltipLayer.selectAll('*').remove();
 
-    // Layer ordering: flights < gateway-links < trip-route < gateway-bubbles < overlay < ships < tooltips
+    // Layer ordering: flights < gateway-links < trip-route < gateway-bubbles < overlay < trip-markers < ships < tooltips
     flightLayer.raise();
     gatewayLayer.raise();       // Gateway links
     tripRouteLayer.raise();     // Trip route above gateway links
     gatewayBubblesLayer.raise(); // Gateway bubbles above trip route
-    overlayLayer.raise();
+    overlayLayer.raise();       // CX markers, destination markers
+    tripMarkersLayer.raise();   // S/E markers above CX
     shipLayer.raise();
     tooltipLayer.raise();
 
@@ -2523,9 +2526,26 @@ const DataPointOverlay = ({ mapRef }) => {
       const tripStrokeWidth = Math.max(6 / zoomLevel, 3);
       const glowStrokeWidth = Math.max(12 / zoomLevel, 6);
 
-      // All segments are gateway jumps now
-      const segmentColor = '#00ff88';
-      const glowColor = 'rgba(0, 255, 136, 0.3)';
+      // Helper to get system center from SVG elements
+      const getTripSystemCenter = (systemId) => {
+        if (!systemId) return null;
+        try {
+          const rect = g.select(`rect[id="${systemId}"]`);
+          if (!rect.empty()) {
+            const x = parseFloat(rect.attr('x'));
+            const y = parseFloat(rect.attr('y'));
+            const w = parseFloat(rect.attr('width')) || 0;
+            const h = parseFloat(rect.attr('height')) || 0;
+            return { x: x + w / 2, y: y + h / 2 };
+          }
+        } catch (err) {
+          // Fall back to graph data
+        }
+        // Fallback to graph coordinates
+        const graphNode = graph.systems[systemId];
+        if (graphNode) return { x: graphNode.x, y: graphNode.y };
+        return null;
+      };
 
       // Draw route segments
       tripRoute.path.forEach((segment, index) => {
@@ -2534,30 +2554,58 @@ const DataPointOverlay = ({ mapRef }) => {
         
         if (!fromSystem || !toSystem) return;
 
+        // Different colors for gateway vs FTL
+        const isGateway = segment.type === 'gateway';
+        const segmentColor = isGateway ? '#a78bfa' : '#34d399'; // Purple for gateway, green for FTL
+        const glowColor = isGateway ? 'rgba(167, 139, 250, 0.3)' : 'rgba(52, 211, 153, 0.3)';
+
+        // For FTL lanes, use system center; for gateways, use graph coordinates
+        let fromX, fromY, toX, toY;
+        if (!isGateway) {
+          // FTL - use center of system circles
+          const fromCenter = getTripSystemCenter(segment.fromSystem);
+          const toCenter = getTripSystemCenter(segment.toSystem);
+          if (!fromCenter || !toCenter) return;
+          fromX = fromCenter.x;
+          fromY = fromCenter.y;
+          toX = toCenter.x;
+          toY = toCenter.y;
+        } else {
+          // Gateway - use graph coordinates
+          fromX = fromSystem.x;
+          fromY = fromSystem.y;
+          toX = toSystem.x;
+          toY = toSystem.y;
+        }
+
         // Glow effect
         tripLayer.append('line')
-          .attr('x1', fromSystem.x)
-          .attr('y1', fromSystem.y)
-          .attr('x2', toSystem.x)
-          .attr('y2', toSystem.y)
+          .attr('x1', fromX)
+          .attr('y1', fromY)
+          .attr('x2', toX)
+          .attr('y2', toY)
           .attr('stroke', glowColor)
           .attr('stroke-width', glowStrokeWidth)
           .attr('stroke-linecap', 'round');
 
-        // Main line
-        tripLayer.append('line')
-          .attr('x1', fromSystem.x)
-          .attr('y1', fromSystem.y)
-          .attr('x2', toSystem.x)
-          .attr('y2', toSystem.y)
+        // Main line - FTL uses dashed line, gateway uses solid
+        const mainLine = tripLayer.append('line')
+          .attr('x1', fromX)
+          .attr('y1', fromY)
+          .attr('x2', toX)
+          .attr('y2', toY)
           .attr('stroke', segmentColor)
           .attr('stroke-width', tripStrokeWidth)
           .attr('stroke-linecap', 'round');
+        
+        if (!isGateway) {
+          mainLine.attr('stroke-dasharray', `${8 / zoomLevel} ${4 / zoomLevel}`);
+        }
 
         // Arrow at midpoint
-        const midX = (fromSystem.x + toSystem.x) / 2;
-        const midY = (fromSystem.y + toSystem.y) / 2;
-        const angle = Math.atan2(toSystem.y - fromSystem.y, toSystem.x - fromSystem.x);
+        const midX = (fromX + toX) / 2;
+        const midY = (fromY + toY) / 2;
+        const angle = Math.atan2(toY - fromY, toX - fromX);
         const arrowSize = Math.max(10 / zoomLevel, 5);
 
         const arrowPoints = [
@@ -2591,77 +2639,89 @@ const DataPointOverlay = ({ mapRef }) => {
           .text(index + 1);
       });
 
-      // Draw start marker
+      // Draw start marker (in tripMarkersLayer to be above CX markers)
       if (tripStartSystem && graph.systems[tripStartSystem.id]) {
-        const startSystem = graph.systems[tripStartSystem.id];
-        const markerSize = Math.max(16 / zoomLevel, 8);
+        const startCenter = getTripSystemCenter(tripStartSystem.id);
+        if (startCenter) {
+          const markerSize = Math.max(12 / zoomLevel, 6); // Reduced by 25%
 
-        // Outer glow
-        tripLayer.append('circle')
-          .attr('cx', startSystem.x)
-          .attr('cy', startSystem.y)
-          .attr('r', markerSize * 1.5)
-          .attr('fill', 'rgba(34, 197, 94, 0.3)')
-          .attr('stroke', 'none');
+          // Outer glow
+          tripMarkersLayer.append('circle')
+            .attr('cx', startCenter.x)
+            .attr('cy', startCenter.y)
+            .attr('r', markerSize * 1.5)
+            .attr('fill', 'rgba(34, 197, 94, 0.3)')
+            .attr('stroke', 'none')
+            .style('pointer-events', 'none');
 
-        // Marker circle
-        tripLayer.append('circle')
-          .attr('cx', startSystem.x)
-          .attr('cy', startSystem.y)
-          .attr('r', markerSize)
-          .attr('fill', '#22c55e')
-          .attr('stroke', '#ffffff')
-          .attr('stroke-width', Math.max(2 / zoomLevel, 1));
+          // Marker circle
+          tripMarkersLayer.append('circle')
+            .attr('cx', startCenter.x)
+            .attr('cy', startCenter.y)
+            .attr('r', markerSize)
+            .attr('fill', '#22c55e')
+            .attr('stroke', '#ffffff')
+            .attr('stroke-width', Math.max(2 / zoomLevel, 1))
+            .style('pointer-events', 'none');
 
-        // Start label
-        tripLayer.append('text')
-          .attr('x', startSystem.x)
-          .attr('y', startSystem.y)
-          .attr('text-anchor', 'middle')
-          .attr('dominant-baseline', 'central')
-          .attr('fill', '#ffffff')
-          .attr('font-size', Math.max(10 / zoomLevel, 5))
-          .attr('font-weight', 'bold')
-          .text('S');
+          // Start label
+          tripMarkersLayer.append('text')
+            .attr('x', startCenter.x)
+            .attr('y', startCenter.y)
+            .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'central')
+            .attr('fill', '#ffffff')
+            .attr('font-size', Math.max(10 / zoomLevel, 5))
+            .attr('font-weight', 'bold')
+            .style('pointer-events', 'none')
+            .text('S');
+        }
       }
 
-      // Draw end marker
+      // Draw end marker (in tripMarkersLayer to be above CX markers)
       if (tripEndSystem && graph.systems[tripEndSystem.id]) {
-        const endSystem = graph.systems[tripEndSystem.id];
-        const markerSize = Math.max(16 / zoomLevel, 8);
+        const endCenter = getTripSystemCenter(tripEndSystem.id);
+        if (endCenter) {
+          const markerSize = Math.max(12 / zoomLevel, 6); // Reduced by 25%
 
-        // Outer glow
-        tripLayer.append('circle')
-          .attr('cx', endSystem.x)
-          .attr('cy', endSystem.y)
-          .attr('r', markerSize * 1.5)
-          .attr('fill', 'rgba(239, 68, 68, 0.3)')
-          .attr('stroke', 'none');
+          // Outer glow
+          tripMarkersLayer.append('circle')
+            .attr('cx', endCenter.x)
+            .attr('cy', endCenter.y)
+            .attr('r', markerSize * 1.5)
+            .attr('fill', 'rgba(239, 68, 68, 0.3)')
+            .attr('stroke', 'none')
+            .style('pointer-events', 'none');
 
-        // Marker circle
-        tripLayer.append('circle')
-          .attr('cx', endSystem.x)
-          .attr('cy', endSystem.y)
-          .attr('r', markerSize)
-          .attr('fill', '#ef4444')
-          .attr('stroke', '#ffffff')
-          .attr('stroke-width', Math.max(2 / zoomLevel, 1));
+          // Marker circle
+          tripMarkersLayer.append('circle')
+            .attr('cx', endCenter.x)
+            .attr('cy', endCenter.y)
+            .attr('r', markerSize)
+            .attr('fill', '#ef4444')
+            .attr('stroke', '#ffffff')
+            .attr('stroke-width', Math.max(2 / zoomLevel, 1))
+            .style('pointer-events', 'none');
 
-        // End label
-        tripLayer.append('text')
-          .attr('x', endSystem.x)
-          .attr('y', endSystem.y)
-          .attr('text-anchor', 'middle')
-          .attr('dominant-baseline', 'central')
-          .attr('fill', '#ffffff')
-          .attr('font-size', Math.max(10 / zoomLevel, 5))
-          .attr('font-weight', 'bold')
-          .text('E');
+          // End label
+          tripMarkersLayer.append('text')
+            .attr('x', endCenter.x)
+            .attr('y', endCenter.y)
+            .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'central')
+            .attr('fill', '#ffffff')
+            .attr('font-size', Math.max(10 / zoomLevel, 5))
+            .attr('font-weight', 'bold')
+            .style('pointer-events', 'none')
+            .text('E');
+        }
       }
     } else {
       // Clear trip route layer if not active
       const tripLayer = getLayer('trip-route-layer');
       tripLayer.selectAll('*').remove();
+      const tripMarkersLayer = getLayer('trip-markers-layer');
+      tripMarkersLayer.selectAll('*').remove();
     }
 
     const shipsById = new Map();
