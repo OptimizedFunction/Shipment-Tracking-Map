@@ -9,7 +9,7 @@ export const SelectionProvider = ({ children }) => {
   const [selectedSystem, setSelectedSystem] = useState(null);
   const [pathfindingSelection, setPathfindingSelection] = useState([]);
 
-  const { findShortestPath, setPathfindingPath } = useContext(GraphContext);
+  const { findShortestPath } = useContext(GraphContext);
 
   const togglePathfinding = useCallback(() => {
   setIsPathfindingEnabled(prev => {
@@ -20,8 +20,7 @@ export const SelectionProvider = ({ children }) => {
     return !prev;
   });
   setPathfindingSelection([]); // Reset selection when toggling
-  setPathfindingPath([]); // Clear the path
-}, [setPathfindingPath]);
+}, []);
 
 const highlightSelectedSystem = useCallback((nextSelectedSystem) => {
   if (isPathfindingEnabled) {
