@@ -246,7 +246,7 @@ export const DataPointProvider = ({ children }) => {
     // 3 volume upgrades, 6000 m3 max volume links
     const highVolumeLinks = [
       ['Katoa', 'UV-351a', 'Etherwind', 'KW-688c'],
-      ['Katoa', 'UV-351a', 'Kiruna', 'XH-594b'],
+      ['Etherwind', 'KW-688c', 'Kiruna', 'XH-594b'],
       ['Ashland', 'PD-754d', 'Promitor', 'VH-331a'],
       ['Etherwind', 'KW-688c', 'Griffonstone', 'LS-300c'],
       ['Griffonstone', 'LS-300c', 'Hephaestus', 'ZV-307c'],
@@ -268,7 +268,10 @@ export const DataPointProvider = ({ children }) => {
     // 1 volume upgrade, 3000 m3 max volume links
     const lowVolumeLinks = [
       ['Etherwind', 'KW-688c', 'Ashland', 'PD-754d'],
-      ['Nova Honshu', 'BS-788c', 'Boucher', 'FK-794b']
+      ['Nova Honshu', 'BS-788c', 'Boucher', 'FK-794b'],
+      ['Verdant', 'YI-715b', 'UY-408a', 'UY-408a'],
+      ['UY-408a', 'UY-408a', 'Saladin', 'PG-899b'],
+      ['Saladin', 'PG-899b', 'Sheol', 'TD-203b'],
     ];
 
     const allGateways = [];
