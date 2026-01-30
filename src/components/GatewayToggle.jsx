@@ -1,5 +1,6 @@
 import React from 'react';
 import { useDataPoints } from '../contexts/DataPointContext';
+import GatewaySelector from './GatewaySelector';
 
 const GatewayToggle = () => {
   const { 
@@ -30,6 +31,7 @@ const GatewayToggle = () => {
       >
         {isSimulationMode ? 'Sim ON' : 'Sim OFF'}
       </button>
+      <GatewaySelector />
       <button
         className={`toggle-token ${showGatewayBubbles ? 'active' : ''}`}
         onClick={toggleGatewayBubbles}

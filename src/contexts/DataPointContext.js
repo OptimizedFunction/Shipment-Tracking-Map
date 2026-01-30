@@ -31,6 +31,9 @@ export const DataPointProvider = ({ children }) => {
   // Simulation mode state
   const [isSimulationMode, setIsSimulationMode] = useState(false);
 
+  // Enabled simulated gateways state (actually stores disabled ones for efficiency)
+  const [disabledSimulatedGateways, setDisabledSimulatedGateways] = useState(new Set());
+
   // Gateway bubbles visibility state
   const [showGatewayBubbles, setShowGatewayBubbles] = useState(true);
 
@@ -191,10 +194,42 @@ export const DataPointProvider = ({ children }) => {
     setShowGatewayBubbles(prev => !prev);
   }, []);
 
+  // Toggle individual simulated gateway (disable/enable)
+  const toggleSimulatedGateway = useCallback((pairKey) => {
+    setDisabledSimulatedGateways(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(pairKey)) {
+        newSet.delete(pairKey);
+      } else {
+        newSet.add(pairKey);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Enable all simulated gateways (clear disabled set)
+  const enableAllSimulatedGateways = useCallback(() => {
+    setDisabledSimulatedGateways(new Set());
+  }, []);
+
+  // Disable all simulated gateways (add all to disabled set)
+  const disableAllSimulatedGateways = useCallback(() => {
+    const allKeys = new Set();
+    // High volume links
+    for (let i = 0; i < 18; i++) {
+      allKeys.add(`high-${i}`);
+    }
+    // Low volume links
+    for (let i = 0; i < 5; i++) {
+      allKeys.add(`low-${i}`);
+    }
+    setDisabledSimulatedGateways(allKeys);
+  }, []);
+
   // Simulated gateway data - creates pairs of gateways with established links
   const simulatedGatewayData = useMemo(() => {
     // Helper to create a gateway pair (bidirectional link)
-    const createGatewayPair = (name1, loc1, name2, loc2, volumeUpgrades, maxVolume) => {
+    const createGatewayPair = (name1, loc1, name2, loc2, volumeUpgrades, maxVolume, pairKey) => {
       const id1 = `sim-${loc1}-${loc2}`;
       const id2 = `sim-${loc2}-${loc1}`;
       return [
@@ -217,7 +252,8 @@ export const DataPointProvider = ({ children }) => {
           UsageAmount: 0,
           UsageCurrency: 'CIS',
           CurrentPhaseJumps: 0,
-          isSimulated: true
+          isSimulated: true,
+          pairKey: pairKey
         },
         {
           GatewayId: id2,
@@ -238,7 +274,8 @@ export const DataPointProvider = ({ children }) => {
           UsageAmount: 0,
           UsageCurrency: 'CIS',
           CurrentPhaseJumps: 0,
-          isSimulated: true
+          isSimulated: true,
+          pairKey: pairKey
         }
       ];
     };
@@ -276,16 +313,23 @@ export const DataPointProvider = ({ children }) => {
 
     const allGateways = [];
     
-    highVolumeLinks.forEach(([name1, loc1, name2, loc2]) => {
-      allGateways.push(...createGatewayPair(name1, loc1, name2, loc2, 3, 6000));
+    highVolumeLinks.forEach(([name1, loc1, name2, loc2], index) => {
+      const pairKey = `high-${index}`;
+      allGateways.push(...createGatewayPair(name1, loc1, name2, loc2, 3, 6000, pairKey));
     });
     
-    lowVolumeLinks.forEach(([name1, loc1, name2, loc2]) => {
-      allGateways.push(...createGatewayPair(name1, loc1, name2, loc2, 1, 3000));
+    lowVolumeLinks.forEach(([name1, loc1, name2, loc2], index) => {
+      const pairKey = `low-${index}`;
+      allGateways.push(...createGatewayPair(name1, loc1, name2, loc2, 1, 3000, pairKey));
     });
 
+    // Filter based on disabled gateways - if no gateways are disabled, show all
+    if (disabledSimulatedGateways.size > 0) {
+      return allGateways.filter(gateway => !disabledSimulatedGateways.has(gateway.pairKey));
+    }
+
     return allGateways;
-  }, []);
+  }, [disabledSimulatedGateways]);
 
   // Effective gateway data based on simulation mode
   const effectiveGatewayData = useMemo(() => {
@@ -364,6 +408,11 @@ export const DataPointProvider = ({ children }) => {
     // Simulation mode
     isSimulationMode,
     toggleSimulationMode,
+    // Simulated gateway selection
+    disabledSimulatedGateways,
+    toggleSimulatedGateway,
+    enableAllSimulatedGateways,
+    disableAllSimulatedGateways,
     // Gateway bubbles
     showGatewayBubbles,
     toggleGatewayBubbles,
