@@ -2050,8 +2050,8 @@ const DataPointOverlay = ({ mapRef }) => {
         let targetBubbleGroup = null;
 
         // Calculate capacity/fuel data (always needed for tooltips)
-        const sourceCurrentJumps = gateway.CurrentPhaseJumps || 0;
-        const targetCurrentJumps = targetGateway.CurrentPhaseJumps || 0;
+        const sourceCurrentJumps = gateway.Jumps || 0;
+        const targetCurrentJumps = targetGateway.Jumps || 0;
         const sourceMaxJumps = gateway.JumpsPerDay || 250;
         const targetMaxJumps = targetGateway.JumpsPerDay || 250;
         const sourceRemainingJumps = Math.max(0, sourceMaxJumps - sourceCurrentJumps);
@@ -2341,7 +2341,7 @@ const DataPointOverlay = ({ mapRef }) => {
                 : null;
               
               // Get failed jumps data
-              const totalJumps = gw.TotalJumps || gw.Jumps || 0;
+              const jumpsIn24h = gw.Jumps || 0;
               const avgFailedFuel = gw.PhaseAverageJumpsFailedDueInsufficientFuel || 0;
               const avgFailedInoperative = gw.PhaseAverageJumpsFailedDueInoperative || 0;
               const avgFailedCapacity = gw.PhaseAverageJumpsFailedDueNoCapacity || 0;
@@ -2368,7 +2368,7 @@ const DataPointOverlay = ({ mapRef }) => {
                 avgFailedInoperative,
                 avgFailedCapacity,
                 totalAvgFailed,
-                totalJumps
+                jumpsIn24h,
               };
             };
             
